@@ -1,0 +1,80 @@
+version: "3.8"
+
+services:
+  webapp-dev:
+    build:
+      context: ./webapp
+      target: dev
+    ports:
+      - "2825:2825"
+    volumes:
+      - ./webapp:/app
+      - ./webapp/node_modules:/app/node_modules
+    env_file:
+      - ./webapp/config/.dev.env
+    stdin_open: true
+    tty: true
+
+  webapp-test:
+    build:
+      context: ./webapp
+      target: test
+    volumes:
+      - ./webapp:/app
+      - ./webapp/node_modules:/app/node_modules
+    env_file:
+      - ./webapp/config/.test.env
+
+  webapp-prod:
+    build:
+      context: ./webapp
+      target: prod
+    ports:
+      - "80:80"
+    env_file:
+      - ./webapp/config/.prod.env
+
+  npm-install:
+    build:
+      context: ./webapp
+      target: base
+    volumes:
+      - ./webapp:/app
+    tty: true
+    stdin_open: true
+    command:
+      ["sh", "-c", "rm -rf node_modules package-lock.json && npm install"]
+
+  # TODO: Configure these to run the database
+  db-dev:
+    build:
+      context: ./db
+      target: dev
+    ports:
+      - "2825:2825"
+    volumes:
+      - ./db:/app
+      - ./db/node_modules:/app/node_modules
+    env_file:
+      - ./db/config/.dev.env
+    stdin_open: true
+    tty: true
+
+  db-test:
+    build:
+      context: ./db
+      target: test
+    volumes:
+      - ./db:/app
+      - ./db/node_modules:/app/node_modules
+    env_file:
+      - ./db/config/.test.env
+
+  db-prod:
+    build:
+      context: ./db
+      target: prod
+    ports:
+      - "80:80"
+    env_file:
+      - ./db/config/.prod.env
