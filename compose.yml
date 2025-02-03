@@ -26,9 +26,7 @@ services:
       - ./webapp/config/.test.env
 
   webapp-prod:
-    build:
-      context: ./webapp
-      target: prod
+    image: ghcr.io/ajvarchetti/capstone_osu_webapp:main
     ports:
       - "80:80"
     env_file:
@@ -71,9 +69,7 @@ services:
       - ./db/config/.test.env
 
   db-prod:
-    build:
-      context: ./db
-      target: prod
+    image: ghcr.io/ajvarchetti/capstone_osu_db:main
     ports:
       - "80:80"
     env_file:
