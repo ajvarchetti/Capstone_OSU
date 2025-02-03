@@ -1,0 +1,23 @@
+# Node files
+node_modules
+npm-debug.log
+
+# Build files
+dist
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Git files
+.git
+.gitignore
+
+# MacOS files
+.DS_Store
+
+# Enviornment files
+*.env
+*.env.*
+!*.env.template
+!*.env.*.template
