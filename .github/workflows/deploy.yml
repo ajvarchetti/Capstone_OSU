@@ -43,4 +43,5 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            docker compose -f ~/compose.prod.yml pull
             docker compose -f ~/compose.prod.yml up --build -d
