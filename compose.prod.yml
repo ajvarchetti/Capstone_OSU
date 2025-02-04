@@ -1,0 +1,15 @@
+services:
+  webapp-prod:
+    image: ghcr.io/ajvarchetti/capstone_osu_webapp:main
+    ports:
+      - "80:80"
+    env_file:
+      - ./webapp/config/.prod.env
+
+  # TODO: Configure these to run the database
+  db-prod:
+    image: ghcr.io/ajvarchetti/capstone_osu_db:main
+    ports:
+      - "90:80"
+    env_file:
+      - ./db/config/.prod.env

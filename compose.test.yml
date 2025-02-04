@@ -1,0 +1,21 @@
+services:
+  webapp-test:
+    build:
+      context: ./webapp
+      target: test
+    volumes:
+      - ./webapp:/app
+      - ./webapp/node_modules:/app/node_modules
+    env_file:
+      - ./webapp/config/.test.env
+
+  # TODO: Configure these to run the database
+  db-test:
+    build:
+      context: ./db
+      target: test
+    volumes:
+      - ./db:/app
+      - ./db/node_modules:/app/node_modules
+    env_file:
+      - ./db/config/.test.env
