@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-webapp:
-    uses: ./.github/workflows/db-docker-publish.yml
+    uses: ./.github/workflows/webapp-docker-publish.yml
 
   build-db:
     uses: ./.github/workflows/db-docker-publish.yml
