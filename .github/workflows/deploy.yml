@@ -6,10 +6,10 @@ on:
 
 jobs:
   build-webapp:
-    uses: ./.github/workflows/db-docker-publish.yml@main
+    uses: ./.github/workflows/db-docker-publish.yml
 
   build-db:
-    uses: ./.github/workflows/db-docker-publish.yml@main
+    uses: ./.github/workflows/db-docker-publish.yml
 
   deploy:
     needs: [build-webapp, build-db]
