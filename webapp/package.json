@@ -5,11 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "start": "docker-compose -f ../compose.yml up --build webapp-dev db-dev",
+    "start": "docker compose -f ../compose.dev.yml up -d",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "test": "docker-compose -f ../compose.yml up --build webapp-test db-test",
-    "docker:npm-install": "docker-compose run --rm npm-install"
+    "test": "docker compose -f ../compose.test.yml up -d"
   },
   "dependencies": {
     "react": "^18.3.1",
