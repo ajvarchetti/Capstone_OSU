@@ -1,14 +1,20 @@
 name: Deploy to Server
 
 on:
-  workflow_run:
-    workflows: ["Webapp Docker Publish", "Database Docker Publish"]
-    types:
-      - completed
+  push:
+    branches: ["main"]
 
 jobs:
-  build-and-deploy:
+  build-webapp:
+    uses: ./.github/workflows/db-docker-publish.yml@main
+
+  build-db:
+    uses: ./.github/workflows/db-docker-publish.yml@main
+
+  deploy:
+    needs: [build-webapp, build-db]
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v2
 
