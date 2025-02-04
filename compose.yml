@@ -49,7 +49,7 @@ services:
       context: ./db
       target: dev
     ports:
-      - "2825:2825"
+      - "2826:2826"
     volumes:
       - ./db:/app
       - ./db/node_modules:/app/node_modules
@@ -71,6 +71,6 @@ services:
   db-prod:
     image: ghcr.io/ajvarchetti/capstone_osu_db:main
     ports:
-      - "80:80"
+      - "90:80"
     env_file:
       - ./db/config/.prod.env
