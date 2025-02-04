@@ -22,7 +22,7 @@ jobs:
         run: ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy with rsync
-        run: rsync -avz -e "ssh -p ${{ secrets.SSH_PORT }}" ./compose.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/
+        run: rsync -avz -e "ssh -p ${{ secrets.SSH_PORT }}" ./compose.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/
 
       - name: Restart Server
         uses: appleboy/ssh-action@master
@@ -32,4 +32,4 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            docker-compose up --build -d webapp-prod db-prod
+            docker compose -f ~/compose.yml up --build -d webapp-prod db-prod
