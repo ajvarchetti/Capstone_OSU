@@ -1,0 +1,11 @@
+services:
+  webapp-npm-install:
+    build:
+      context: ./webapp
+      target: dev
+    volumes:
+      - ./webapp:/app
+    stdin_open: true
+    tty: true
+    command:
+      ["sh", "-c", "rm -rf node_modules package-lock.json && npm install"]
