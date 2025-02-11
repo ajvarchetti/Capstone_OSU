@@ -8,7 +8,8 @@
     "start": "docker compose -f ../compose.dev.yml up -d",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "test": "docker compose -f ../compose.test.yml up -d"
+    "test": "docker compose -f ../compose.test.yml up -d",
+    "docker:npm-install": "docker compose -f ../compose.npm-install.yml run --rm webapp-npm-install"
   },
   "dependencies": {
     "react": "^18.3.1",

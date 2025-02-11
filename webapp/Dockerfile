@@ -56,3 +56,9 @@ CMD ["nginx", "-g", "daemon off;"]
 # Optional: Add health check
 # HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost/ || exit 1
 
+# Helper command to install node packages
+FROM node:22-alpine as npm-install
+
+WORKDIR /app
+
+COPY package.json ./
