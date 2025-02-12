@@ -1,42 +1,104 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+.container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+.sidebar {
+  width: 200px; /* Fixed size */
+  background-color: #e5e7eb;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 0; /* Prevent resizing */
+}
+
+.stored-responses {
+  font-size: 1.125rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.response-list {
+  overflow-y: auto;
+  max-height: 24rem;
+  padding: 0;
+  margin: 0;
+}
+
+.response-item {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background-color: #ffffff;
+  border-radius: 0.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.response-item.active {
+  background-color: #d1fae5;
+  border: 2px solid #10b981;
+}
+
+.button {
+  padding: .5rem;
+  border-radius: 0.25rem;
+  color: #ffffff;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.new-theory-button {
+  background-color: #3b82f6;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: top; /* Centering content */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.header-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  text-align: center; /* Centering text */
 }
 
-.card {
-  padding: 2em;
+.input-field {
+  border: 1px solid #d1d5db;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  margin: 0.5rem 0; /* Spacing between inputs */
+  text-align: center; /* Centering input text */
 }
 
-.read-the-docs {
-  color: #888;
+.generate-button {
+  background-color: #10b981;
+}
+
+.response-box {
+  border: 1px solid #d1d5db;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  background-color: #f3f4f6;
+  margin: 0 auto;
+  width: 75%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  margin: 0 0 30vh 0;
+  padding: 10px 0;
+  text-align: center; /* Ensure the title is centered */
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 50% 0 0 0
 }
