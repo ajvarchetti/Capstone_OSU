@@ -1,34 +1,63 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [topic1, setTopic1] = useState("");
+  const [topic2, setTopic2] = useState("");
+  const [theory, setTheory] = useState("");
+  const [history, setHistory] = useState<string[]>([]);
+
+  const generateTheory = () => {
+    if (topic1 && topic2) {
+      const newTheory = `Did you know that ${topic1} is secretly connected to ${topic2}? The truth is out there!`;
+      setTheory(newTheory);
+      setHistory([newTheory, ...history]); // Add new theory to history
+      setTopic1(""); // Clear input fields
+      setTopic2("");
+    } else {
+      setTheory("Please enter two topics to generate a theory.");
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="container">
+      {/* Left Sidebar for History */}
+      <div className="history">
+        <h2 className="text-xl font-bold">Theory History</h2>
+        <ul>
+          {history.map((item, index) => (
+            <li key={index} className="history-item">
+              {item}
+            </li>
+          ))}
+        </ul>
       </div>
-      <h1>Conspiragen</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
+
+      {/* Main Content */}
+      <div className="main">
+        <h1 className="text-3xl font-bold mb-6">Conspiragen</h1>
+        <p>Enter two topics to create a conspiracy theory linking them together:</p>
         <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
+          <input
+            type="text"
+            value={topic1}
+            onChange={(e) => setTopic1(e.target.value)}
+            placeholder="First topic"
+          />{" "}
+          and{" "}
+          <input
+            type="text"
+            value={topic2}
+            onChange={(e) => setTopic2(e.target.value)}
+            placeholder="Second topic"
+          />
         </p>
+        <div className="card">
+          <button onClick={generateTheory}>Create Theory</button>
+        </div>
+        {theory && <p className="mt-4">{theory}</p>}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   );
 }
 
