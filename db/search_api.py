@@ -6,7 +6,7 @@ import google.generativeai as genai
 es = Elasticsearch("http://localhost:9200")
 
 # Configure Gemini API
-GENAI_API_KEY = "AIzaSyBW-UAEJochNjflBPRp10kXl3l9CJd8B2w"
+GENAI_API_KEY = "Your API KEY"
 genai.configure(api_key=GENAI_API_KEY)
 
 app = Flask(__name__)
