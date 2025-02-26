@@ -9,6 +9,7 @@ function App()  {
   const [activeResponse, setActiveResponse] = useState<number | null>(null);
   const [showResponse, setShowResponse] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const isButtonDisabled = !input1.trim() || !input2.trim();
 
   const generateTheory = () => {
     const newTheory = `What if ${input1} and ${input2} are secretly connected through an ancient organization?`;
@@ -77,7 +78,13 @@ function App()  {
               />
             </div>
             <div className="button-container">
-              <button onClick={generateTheory} className="button generate-button">Generate Theory</button>
+              <button
+                onClick={generateTheory}
+                className={isButtonDisabled ? "button disabled-button" : "button generate-button"}
+                disabled={isButtonDisabled}
+              >
+                Generate Theory
+              </button>
             </div>
           </div>
         ) : (

@@ -15,6 +15,7 @@
 }
 
 .stored-responses {
+  color: #00000f;
   font-size: 1.125rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
@@ -49,6 +50,7 @@
 
 .new-theory-button {
   background-color: #3b82f6;
+  border: 2px solid #004181;
 }
 
 .main-content {
@@ -77,8 +79,16 @@
 
 .generate-button {
   background-color: #10b981;
+  color: black; 
 }
 
+.disabled-button {
+    background-color: #9ca3af;
+    color: #4b5563;
+    cursor: not-allowed;
+    border: 2px solid #6b7280;
+    opacity: 0.6; 
+}
 .response-box {
   border: 1px solid #d1d5db;
   padding: 1rem;
@@ -100,5 +110,26 @@
   justify-content: center;
   align-items: center;
   width: 100%;
-  margin: 50% 0 0 0
+  margin: 40% 0 0 0
+}
+
+@media (prefers-color-scheme: dark) {
+  .sidebar {
+    background-color: #8c8c8c;
+  }
+  .new-theory-button {
+    background-color: #3b82f6;
+    color: black;
+  }
+  .response-box {
+    background-color: #8c8c8c;
+    color: black;
+  }
+  .response-item {
+    color: black;
+  }
+  .response-item.active {
+    background-color: #00b4b4;
+    border: 2px solid #004e4e;
+  }
 }
