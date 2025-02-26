@@ -13,6 +13,7 @@ export default defineConfig({
       interval: 500,
     },
   },
+  envDir: "./config/",
   test: {
     globals: true,
     environment: "jsdom",
