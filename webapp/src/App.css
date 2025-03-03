@@ -5,13 +5,15 @@
 }
 
 .sidebar {
-  width: 200px; /* Fixed size */
+  width: 15%; /* Fixed size */
+  height: 100vh; /* Takes the full viewport height */
   background-color: #e5e7eb;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   flex-shrink: 0; /* Prevent resizing */
+  position: fixed;
 }
 
 .stored-responses {
@@ -23,9 +25,9 @@
 
 .response-list {
   overflow-y: auto;
-  max-height: 24rem;
   padding: 0;
   margin: 0;
+  max-height: 33rem;
 }
 
 .response-item {
@@ -34,6 +36,7 @@
   background-color: #ffffff;
   border-radius: 0.25rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  width: 12rem;
 }
 
 .response-item.active {
@@ -51,6 +54,10 @@
 .new-theory-button {
   background-color: #3b82f6;
   border: 2px solid #004181;
+  padding: 0.5rem;
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
 }
 
 .main-content {
@@ -59,7 +66,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: top; /* Centering content */
 }
 
 .header-text {
@@ -95,8 +101,9 @@
   border-radius: 0.25rem;
   background-color: #f3f4f6;
   margin: 0 auto;
-  width: 75%;
+  width: 50vw;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  word-wrap: break-word;
 }
 
 .title {
