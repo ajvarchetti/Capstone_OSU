@@ -5,7 +5,8 @@
 }
 
 .sidebar {
-  width: 15%; /* Fixed size */
+  min-width: 200px;
+  width: 15%;
   height: 100vh; /* Takes the full viewport height */
   background-color: #e5e7eb;
   padding: 1rem;
@@ -20,14 +21,15 @@
   color: #00000f;
   font-size: 1.125rem;
   font-weight: bold;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .response-list {
   overflow-y: auto;
   padding: 0;
   margin: 0;
-  max-height: 33rem;
+  max-height: 84vh;
 }
 
 .response-item {
@@ -36,7 +38,7 @@
   background-color: #ffffff;
   border-radius: 0.25rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  width: 12rem;
+  width: 85%;
 }
 
 .response-item.active {
@@ -55,9 +57,22 @@
   background-color: #3b82f6;
   border: 2px solid #004181;
   padding: 0.5rem;
-  position: fixed;
-  bottom: 1rem;
+  position: absolute;
+  bottom: 3rem;
   left: 50%;
+  transform: translateX(-50%);
+  width: fit-content;
+}
+
+.centered-theory-button {
+  background-color: #3b82f6;
+  border: 2px solid #004181;
+  padding: 0.5rem;
+  position: fixed;
+  bottom: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: fit-content;
 }
 
 .main-content {
@@ -125,6 +140,10 @@
     background-color: #8c8c8c;
   }
   .new-theory-button {
+    background-color: #3b82f6;
+    color: black;
+  }
+  .centered-theory-button {
     background-color: #3b82f6;
     color: black;
   }
