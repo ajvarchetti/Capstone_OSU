@@ -54,6 +54,9 @@ function App()  {
       )}
 
       <div className="main-content">
+      
+      <img className="main-logo" src="favicon.png"/>
+
       <h1 className="title">Conspiragen</h1>
         {!showResponse ? (
           <div className="text-center">

@@ -25,3 +25,12 @@ If you have difficulty with packages (specifically if you get an error stating y
 - Get front end template complete
 - Build our custom dataset and get it on the cloud
 - Start querying Gemini or Deepseek with prompts from elsaticsearch information
+
+## Additional information
+### Hex Codes
+- Very Dark Blue: #011f4b
+- Dark Blue: #03396c
+- Blue: #005b96
+- Light Blue: #6497b1
+- Lightest Blue: #b3cde0
+[Source Website (Last Accessed 3/16/2025)](https://www.color-hex.com/color-palette/1294)
