@@ -49,8 +49,7 @@
 }
 
 .new-theory-button {
-  background-color: #3b82f6;
-  border: 2px solid #004181;
+  background-color: #6497b1;
 }
 
 .main-content {
@@ -78,7 +77,7 @@
 }
 
 .generate-button {
-  background-color: #10b981;
+  background-color: #005b96;
   color: black; 
 }
 
@@ -123,18 +122,19 @@
     background-color: #8c8c8c;
   }
   .new-theory-button {
-    background-color: #3b82f6;
+    background-color: #b3cde0;
     color: black;
   }
   .response-box {
-    background-color: #8c8c8c;
+    background-color: #b3cde0;
     color: black;
   }
   .response-item {
     color: black;
+    background-color: #b3cde0;
   }
   .response-item.active {
-    background-color: #00b4b4;
-    border: 2px solid #004e4e;
+    background-color: #6497b1;
+    border: 2px solid #005b96;
   }
 }
