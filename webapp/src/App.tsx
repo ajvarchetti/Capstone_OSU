@@ -35,6 +35,7 @@ function App()  {
         <div className="sidebar">
           <div>
             <h2 className="stored-responses">Stored Responses</h2>
+            <hr className="stored-responses-line"></hr>
             <ul className="response-list" style={{ padding: 0, margin: 0 }}>
               {responses.map((resp, index) => (
                 <li 
@@ -59,27 +60,33 @@ function App()  {
 
       <h1 className="title">Conspiragen</h1>
         {!showResponse ? (
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <span>Generate Conspiracy Theory between</span>
-              <input 
-                type="text" 
-                value={input1} 
-                onChange={(e) => setInput1(e.target.value)} 
-                placeholder="First Entity" 
-                className="input-field"
-                style={{ margin: '0 8px' }}
-              />
-              <span>and</span>
-              <input 
-                type="text" 
-                value={input2} 
-                onChange={(e) => setInput2(e.target.value)} 
-                placeholder="Second Entity" 
-                className="input-field"
-                style={{ margin: '0 8px' }}
-              />
+
+          <div>
+
+            <div className="intro-text">
+              <span>To generate a conspiracy theory between two topics, enter the topics in the boxes below!</span>
             </div>
+
+            <div className = "inputs">
+              <input 
+                  type="text" 
+                  value={input1} 
+                  onChange={(e) => setInput1(e.target.value)} 
+                  placeholder="First Topic" 
+                  className="input-field"
+                  style={{ margin: '0 32px' }}
+                />
+
+              <input 
+                  type="text" 
+                  value={input2} 
+                  onChange={(e) => setInput2(e.target.value)} 
+                  placeholder="Second Topic" 
+                  className="input-field"
+                  style={{ margin: '0 32px' }}
+                />
+            </div>
+
             <div className="button-container">
               <button
                 onClick={generateTheory}
