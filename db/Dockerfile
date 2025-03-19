@@ -1,10 +1,12 @@
-FROM python:3.9-slim
+FROM python:3.9-slim AS base
 
 WORKDIR /db
 
 # Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+FROM base as with-chrome
 
 # Install chrome and chromedriver for Selenium
 RUN apt-get update -qq -y
