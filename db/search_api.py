@@ -3,10 +3,6 @@ from elasticsearch import Elasticsearch
 import google.generativeai as genai
 import os
 import time
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Configure Elasticsearch
 ES_HOST = os.getenv("ES_HOST", "http://elasticsearch:9200")
