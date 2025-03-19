@@ -29,6 +29,7 @@ services:
   update-data:
     build:
       context: ./db
+      target: with-chrome
     depends_on:
       - elasticsearch
     env_file:
@@ -43,6 +44,7 @@ services:
   elasticsearch-wrapper-api:
     build:
       context: ./db
+      target: base
     ports:
       - "5002:5002"
     depends_on:
