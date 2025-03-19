@@ -139,9 +139,12 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  body {
+    background-color: #011f4b;
+  }
   .sidebar {
-    background-color: #005b96;
-    border-right: 2px solid  #03396c
+    background-color: #03396c;
+    border-right: 2px solid #03396c
   }
   .new-theory-button {
     background-color: #6497b1;
