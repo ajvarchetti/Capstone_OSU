@@ -10,7 +10,7 @@ services:
     ports:
       - "9200:9200"
     volumes:
-      - esdata:/usr/share/elasticsearch/data  # ✅ 使用 Docker volume
+      - esdata:/usr/share/elasticsearch/data  # ✅  Docker volume
 
   uploader:
     build: .
@@ -35,5 +35,5 @@ services:
       - .env
 
 volumes:
-  esdata:  # ✅ 定义持久化存储
+  esdata:  # ✅ define long term storage
     driver: local
