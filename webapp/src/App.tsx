@@ -106,7 +106,7 @@ function App()  {
         {showResponse ? (
           <div>
             <br></br>
-            <button onClick={startNewTheory} className="centered-theory-button">New Theory</button>
+            <button onClick={startNewTheory} className="button centered-theory-button">New Theory</button>
           </div>
         ) : null}
       </div>
