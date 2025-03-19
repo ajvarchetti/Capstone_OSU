@@ -22,8 +22,7 @@ services:
     ports:
       - "9200:9200"
     volumes:
-      - esdata:/usr/share/elasticsearch/data # Docker volume
-      - ./db:/db
+      - ./db/data:/usr/share/elasticsearch/data # Docker volume
     env_file:
       - ./db/config/.dev.env
 
@@ -34,6 +33,12 @@ services:
       - elasticsearch
     env_file:
       - ./db/config/.dev.env
+    volumes:
+      - ./db:/db
+    command: >
+      sh -c "python3 download_topviews.py &&
+            python3 download_wiki_articles.py &&
+            python3 database_import.py"
 
   elasticsearch-wrapper-api:
     build:
@@ -44,3 +49,7 @@ services:
       - elasticsearch
     env_file:
       - ./db/config/.dev.env
+    volumes:
+      - ./db:/db
+    command: >
+      sh -c "python3 elasticsearch_wrapper_api.py"
