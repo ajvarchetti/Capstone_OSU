@@ -101,10 +101,11 @@ def main():
     if articles:
         with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
             json.dump(articles, f, indent=4, ensure_ascii=False)
-        print(f"\n🎉 Cleaning complete! Data saved to {OUTPUT_FILE}")
+        print(f"\n🎉 Wiki Download complete! Data saved to {OUTPUT_FILE}")
     else:
         print("❌ No valid data found, output file is empty!")
 
 if __name__ == "__main__":
+    print("Starting data download...")
     main()
     
