@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import requests
 import os
@@ -51,6 +52,30 @@ def fetch_wikipedia_content(title):
 
     return "No content available.", page_url
 
+def process_article(item):
+    """Process a single article and fetch Wikipedia content."""
+    # Handle both formats: "article" and "label"
+    title = item.get("article") or item.get("label")
+
+    if not title or not isinstance(title, str):
+        print(f"⚠️ Skipping invalid article: {item}")
+        return None  # Skip invalid data
+
+    title = title.replace("_", " ")  # Convert to Wikipedia page format
+
+    wikipedia_content, source_url = fetch_wikipedia_content(title)
+
+    if wikipedia_content == "No content available.":
+        print(f"⚠️ No Wikipedia content found for: {title}")
+        return None  # Skip entries with no Wikipedia data
+
+    print(f"✅ Processed: {title}")
+    return {
+        "title": title,
+        "wikipedia_content": wikipedia_content,
+        "source_url": source_url
+    }
+
 def main():
     try:
         with open(INPUT_FILE, "r", encoding="utf-8") as f:
@@ -61,28 +86,17 @@ def main():
         return
 
     articles = []
-    for item in data:
-        # Handle both formats: "article" and "label"
-        title = item.get("article") or item.get("label")
 
-        if not title or not isinstance(title, str):
-            print(f"⚠️ Skipping invalid entry: {item}")
-            continue  # Skip invalid data
+    # Use ThreadPoolExecutor to parallelize the processing
+    with ThreadPoolExecutor(max_workers=100) as executor:
+        # Submit tasks for each article
+        futures = {executor.submit(process_article, item): item for item in data}
 
-        title = title.replace("_", " ")  # Convert to Wikipedia page format
-
-        wikipedia_content, source_url = fetch_wikipedia_content(title)
-
-        if wikipedia_content == "No content available.":
-            print(f"⚠️ No Wikipedia content found for: {title}")
-            continue  # Skip entries with no Wikipedia data
-
-        articles.append({
-            "title": title,
-            "wikipedia_content": wikipedia_content,
-            "source_url": source_url
-        })
-        print(f"✅ Processed: {title}")
+        # Collect results as they complete
+        for future in as_completed(futures):
+            result = future.result()
+            if result:
+                articles.append(result)
 
     if articles:
         with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
