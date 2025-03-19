@@ -32,6 +32,7 @@ This project is a **Wikipedia-based Conspiracy Generator** that retrieves Wikipe
 ### Prerequisites
 - **Docker & Docker Compose**
 - **Python 3.9+** (if running locally)
+- **Replace the GEMINI API in the .env before using
 
 ### Steps to Run
 #### 1. Clone the Repository
