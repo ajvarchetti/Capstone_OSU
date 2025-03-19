@@ -39,7 +39,7 @@ services:
     command: >
       sh -c "python3 download_topviews.py &&
             python3 download_wiki_articles.py &&
-            python3 database_import.py"
+            python3 elasticsearch_import.py"
 
   elasticsearch-wrapper-api:
     build:
