@@ -47,18 +47,26 @@
 .button {
   padding: .5rem;
   border-radius: 0.25rem;
-  color: #ffffff;
+  color: white;
   text-align: center;
+  background-color: #005b96;
 }
 
 .new-theory-button {
-  background-color: #005b96;
-  color: white;
 }
 
 .centered-theory-button {
-  background-color: #005b96;
-  color: white;
+}
+
+.generate-button {
+}
+
+.disabled-button {
+  background-color: #9ca3af;
+  color: #4b5563;
+  cursor: not-allowed;
+  border: 2px solid #6b7280;
+  opacity: 0.6;
 }
 
 .main-content {
@@ -84,18 +92,6 @@
   text-align: center; 
 }
 
-.generate-button {
-  background-color: #005b96;
-  color: white; 
-}
-
-.disabled-button {
-  background-color: #9ca3af;
-  color: #4b5563;
-  cursor: not-allowed;
-  border: 2px solid #6b7280;
-  opacity: 0.6; 
-}
 .response-box {
   border: 1px solid #d1d5db;
   padding: 1rem;
@@ -153,12 +149,12 @@
     border-right: 2px solid #03396c
   }
   .new-theory-button {
-    background-color: #6497b1;
+    background-color: #3b82f6;
     color: white;
   }
   .centered-theory-button {
-    background-color: #3b82f6;
-    color: black;
+    background-color: #005b96;
+    color: white;
   }
   .response-box {
     background-color: #6497b1;
