@@ -6,7 +6,7 @@ import os
 # Read the original data file
 DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 INPUT_FILE = os.path.join(DATA_FOLDER, "topviews.json")
-OUTPUT_FILE = os.path.join(DATA_FOLDER, "wiki_entries.json")
+OUTPUT_FILE = os.path.join(DATA_FOLDER, "wiki_articles.json")
 
 # Wikipedia API endpoints
 WIKI_SUMMARY_API = "https://en.wikipedia.org/api/rest_v1/page/summary/"
