@@ -1,9 +1,11 @@
 import json
 import requests
+import os
 
 # Read the original data file
-input_file = "conspiracy.json"
-output_file = "cleaned_Conspiracy.json"
+DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+INPUT_FILE = os.path.join(DATA_FOLDER, "topviews.json")
+OUTPUT_FILE = os.path.join(DATA_FOLDER, "wiki_entries.json")
 
 # Wikipedia API endpoints
 WIKI_SUMMARY_API = "https://en.wikipedia.org/api/rest_v1/page/summary/"
@@ -49,17 +51,16 @@ def fetch_wikipedia_content(title):
 
     return "No content available.", page_url
 
-def clean_data():
-    """Clean data from topviews-2024.json and save it to cleaned_2024Data.json"""
+def main():
     try:
-        with open(input_file, "r", encoding="utf-8") as f:
+        with open(INPUT_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-        print(f"📂 Loaded {len(data)} entries from {input_file}")
+        print(f"📂 Loaded {len(data)} entries from {INPUT_FILE}")
     except (FileNotFoundError, json.JSONDecodeError):
-        print(f"❌ Error: File {input_file} not found or not valid JSON!")
+        print(f"❌ Error: File {INPUT_FILE} not found or not valid JSON!")
         return
 
-    cleaned_data = []
+    articles = []
     for item in data:
         # Handle both formats: "article" and "label"
         title = item.get("article") or item.get("label")
@@ -76,21 +77,20 @@ def clean_data():
             print(f"⚠️ No Wikipedia content found for: {title}")
             continue  # Skip entries with no Wikipedia data
 
-        cleaned_entry = {
+        articles.append({
             "title": title,
             "wikipedia_content": wikipedia_content,
             "source_url": source_url
-        }
-        cleaned_data.append(cleaned_entry)
+        })
         print(f"✅ Processed: {title}")
 
-    if cleaned_data:
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(cleaned_data, f, indent=4, ensure_ascii=False)
-        print(f"\n🎉 Cleaning complete! Data saved to {output_file}")
+    if articles:
+        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+            json.dump(articles, f, indent=4, ensure_ascii=False)
+        print(f"\n🎉 Cleaning complete! Data saved to {OUTPUT_FILE}")
     else:
         print("❌ No valid data found, output file is empty!")
 
 if __name__ == "__main__":
-    clean_data()
+    main()
     
