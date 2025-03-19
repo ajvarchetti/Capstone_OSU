@@ -33,13 +33,13 @@ else:
     print("✅ Elasticsearch connection established.")
 
 # Configure Gemini API
-GENAI_API_KEY = os.environ.get("GENAI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-if not GENAI_API_KEY:
+if not GEMINI_API_KEY:
     print("⚠️ Gemini API key not set. Check .env file.")
 else:
     try:
-        genai.configure(api_key=GENAI_API_KEY)
+        genai.configure(api_key=GEMINI_API_KEY)
         print("✅ Gemini API configured successfully")
     except Exception as e:
         print(f"❌ Gemini API initialization failed: {e}")
@@ -88,7 +88,7 @@ def generate_conspiracy(keywords, wiki_data):
     """
     Use Gemini AI to generate a conspiracy theory
     """
-    if not GENAI_API_KEY:
+    if not GEMINI_API_KEY:
         return "Error: Gemini API key is not set."
 
     try:
@@ -147,7 +147,7 @@ def debug_status():
             "index_exists": False
         },
         "gemini_api": {
-            "configured": bool(GENAI_API_KEY), 
+            "configured": bool(GEMINI_API_KEY), 
             "error": None, 
             "model_initialized": False
         },
@@ -174,7 +174,7 @@ def debug_status():
         status["elasticsearch"]["error"] = str(e)
 
     # Check Gemini configuration
-    if GENAI_API_KEY:
+    if GEMINI_API_KEY:
         try:
             model = genai.GenerativeModel("gemini-1.5-pro")
             status["gemini_api"]["model_initialized"] = True
