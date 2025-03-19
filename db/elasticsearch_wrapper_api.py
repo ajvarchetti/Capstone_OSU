@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from elasticsearch import Elasticsearch
 import google.generativeai as genai
 import os
@@ -45,6 +46,7 @@ else:
         print(f"❌ Gemini API initialization failed: {e}")
 
 app = Flask(__name__)
+CORS(app)
 
 def search_wikipedia(query):
     """
