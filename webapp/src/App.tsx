@@ -9,7 +9,7 @@ function App()  {
   const [activeResponse, setActiveResponse] = useState<number | null>(null);
   const [showResponse, setShowResponse] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
-  const isButtonDisabled = !input1.trim() || !input2.trim();
+  const isButtonDisabled = !input1.trim() || !input2.trim() || input1.trim().length>255 || input2.trim().length>255;
 
   const generateTheory = () => {
     const newTheory = `What if ${input1} and ${input2} are secretly connected through an ancient organization?`;
@@ -56,10 +56,10 @@ function App()  {
 
       <div className="main-content">
       
-      <img className="main-logo" src="favicon.png"/>
+        <img className="main-logo" src="favicon.png"/>
 
-      <h1 className="title">Conspiragen</h1>
-        {!showResponse ? (
+        <h1 className="title">Conspiragen</h1>
+          {!showResponse ? (
 
           <div>
 
@@ -103,6 +103,12 @@ function App()  {
             <p className="response-box">{theory}</p>
           </div>
         )}
+        {showResponse ? (
+          <div>
+            <br></br>
+            <button onClick={startNewTheory} className="centered-theory-button">New Theory</button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
