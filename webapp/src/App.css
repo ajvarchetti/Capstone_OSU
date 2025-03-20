@@ -53,6 +53,7 @@
 }
 
 .new-theory-button {
+  width: 100%;
 }
 
 .centered-theory-button {
@@ -138,6 +139,15 @@
   height: 2px;
   border: none;
   background-color: #011f4b
+}
+
+.clear-history-button {
+  background-color: #ff4d4d;
+  color: white;
+}
+
+.clear-history-button:hover {
+  background-color: #cc0000;
 }
 
 @media (prefers-color-scheme: dark) {
