@@ -1,15 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 
 function App()  {
   const [theory, setTheory] = useState('');
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
-  const [responses, setResponses] = useState<{ title: string; content: string }[]>([]);
+  const [responses, setResponses] = useState<{ title: string; content: string }[]>(() => {
+    const storedResponses = localStorage.getItem("responses");
+    return storedResponses ? JSON.parse(storedResponses) : [];
+  });
   const [activeResponse, setActiveResponse] = useState<number | null>(null);
   const [showResponse, setShowResponse] = useState(false);
-  const [hasGenerated, setHasGenerated] = useState(false);
-  const isButtonDisabled = !input1.trim() || !input2.trim() || input1.trim().length>255 || input2.trim().length>255;
+  const [hasGenerated, setHasGenerated] = useState(responses.length > 0);
+  const isButtonDisabled = !input1.trim() || !input2.trim() || input1.trim().length > 255 || input2.trim().length > 255;
+
+  useEffect(() => {
+    localStorage.setItem("responses", JSON.stringify(responses));
+  }, [responses]);
 
   const generateTheory = () => {
     const newTheory = `What if ${input1} and ${input2} are secretly connected through an ancient organization?`;
@@ -29,6 +36,12 @@ function App()  {
     setActiveResponse(null);
   };
 
+  const clearHistory = () => {
+    setResponses([]); // Reset state
+    localStorage.removeItem("responses"); // Clear localStorage
+    setHasGenerated(false); // Hide sidebar
+  };
+
   return (
     <div className="container">
       {hasGenerated && (
@@ -38,9 +51,9 @@ function App()  {
             <hr className="stored-responses-line"></hr>
             <ul className="response-list" style={{ padding: 0, margin: 0 }}>
               {responses.map((resp, index) => (
-                <li 
-                  key={index} 
-                  className={`response-item ${activeResponse === index ? 'active' : ''}`} 
+                <li
+                  key={index}
+                  className={`response-item ${activeResponse === index ? 'active' : ''}`}
                   onClick={() => { setTheory(resp.content); setShowResponse(true); setActiveResponse(index); }}
                   title={resp.title}
                   style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}
@@ -49,8 +62,9 @@ function App()  {
                 </li>
               ))}
             </ul>
+            <button onClick={startNewTheory} className="button new-theory-button">New Theory</button>
           </div>
-          <button onClick={startNewTheory} className="button new-theory-button">New Theory</button>
+          <button onClick={clearHistory} className="button clear-history-button">Clear History</button>
         </div>
       )}
 
@@ -59,7 +73,7 @@ function App()  {
         <img className="main-logo" src="favicon.png"/>
 
         <h1 className="title">Conspiragen</h1>
-          {!showResponse ? (
+        {!showResponse ? (
 
           <div>
 
@@ -68,23 +82,23 @@ function App()  {
             </div>
 
             <div className = "inputs">
-              <input 
-                  type="text" 
-                  value={input1} 
-                  onChange={(e) => setInput1(e.target.value)} 
-                  placeholder="First Topic" 
-                  className="input-field"
-                  style={{ margin: '0 32px' }}
-                />
+              <input
+                type="text"
+                value={input1}
+                onChange={(e) => setInput1(e.target.value)}
+                placeholder="First Topic"
+                className="input-field"
+                style={{ margin: '0 32px' }}
+              />
 
-              <input 
-                  type="text" 
-                  value={input2} 
-                  onChange={(e) => setInput2(e.target.value)} 
-                  placeholder="Second Topic" 
-                  className="input-field"
-                  style={{ margin: '0 32px' }}
-                />
+              <input
+                type="text"
+                value={input2}
+                onChange={(e) => setInput2(e.target.value)}
+                placeholder="Second Topic"
+                className="input-field"
+                style={{ margin: '0 32px' }}
+              />
             </div>
 
             <div className="button-container">
