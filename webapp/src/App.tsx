@@ -1,15 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 
 function App()  {
   const [theory, setTheory] = useState('');
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
-  const [responses, setResponses] = useState<{ title: string; content: string }[]>([]);
+  const [responses, setResponses] = useState<{ title: string; content: string }[]>(() => {
+    const storedResponses = localStorage.getItem("responses");
+    return storedResponses ? JSON.parse(storedResponses) : [];
+  });
   const [activeResponse, setActiveResponse] = useState<number | null>(null);
   const [showResponse, setShowResponse] = useState(false);
-  const [hasGenerated, setHasGenerated] = useState(false);
-  const isButtonDisabled = !input1.trim() || !input2.trim();
+  const [hasGenerated, setHasGenerated] = useState(responses.length > 0);
+  const isButtonDisabled = !input1.trim() || !input2.trim() || input1.trim().length > 255 || input2.trim().length > 255;
+
+  useEffect(() => {
+    localStorage.setItem("responses", JSON.stringify(responses));
+  }, [responses]);
 
   const generateTheory = async () => {
     if (!input1 || !input2) {
@@ -52,17 +59,24 @@ function App()  {
     setActiveResponse(null);
   };
 
+  const clearHistory = () => {
+    setResponses([]); // Reset state
+    localStorage.removeItem("responses"); // Clear localStorage
+    setHasGenerated(false); // Hide sidebar
+  };
+
   return (
     <div className="container">
       {hasGenerated && (
         <div className="sidebar">
           <div>
             <h2 className="stored-responses">Stored Responses</h2>
+            <hr className="stored-responses-line"></hr>
             <ul className="response-list" style={{ padding: 0, margin: 0 }}>
               {responses.map((resp, index) => (
-                <li 
-                  key={index} 
-                  className={`response-item ${activeResponse === index ? 'active' : ''}`} 
+                <li
+                  key={index}
+                  className={`response-item ${activeResponse === index ? 'active' : ''}`}
                   onClick={() => { setTheory(resp.content); setShowResponse(true); setActiveResponse(index); }}
                   title={resp.title}
                   style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}
@@ -71,38 +85,45 @@ function App()  {
                 </li>
               ))}
             </ul>
+            <button onClick={startNewTheory} className="button new-theory-button">New Theory</button>
           </div>
-          <button onClick={startNewTheory} className="button new-theory-button">New Theory</button>
+          <button onClick={clearHistory} className="button clear-history-button">Clear History</button>
         </div>
       )}
 
       <div className="main-content">
       
-      <img className="main-logo" src="favicon.png"/>
+        <img className="main-logo" src="favicon.png"/>
 
-      <h1 className="title">Conspiragen</h1>
+        <h1 className="title">Conspiragen</h1>
         {!showResponse ? (
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <span>Generate Conspiracy Theory between</span>
-              <input 
-                type="text" 
-                value={input1} 
-                onChange={(e) => setInput1(e.target.value)} 
-                placeholder="First Entity" 
+
+          <div>
+
+            <div className="intro-text">
+              <span>To generate a conspiracy theory between two topics, enter the topics in the boxes below!</span>
+            </div>
+
+            <div className = "inputs">
+              <input
+                type="text"
+                value={input1}
+                onChange={(e) => setInput1(e.target.value)}
+                placeholder="First Topic"
                 className="input-field"
-                style={{ margin: '0 8px' }}
+                style={{ margin: '0 32px' }}
               />
-              <span>and</span>
-              <input 
-                type="text" 
-                value={input2} 
-                onChange={(e) => setInput2(e.target.value)} 
-                placeholder="Second Entity" 
+
+              <input
+                type="text"
+                value={input2}
+                onChange={(e) => setInput2(e.target.value)}
+                placeholder="Second Topic"
                 className="input-field"
-                style={{ margin: '0 8px' }}
+                style={{ margin: '0 32px' }}
               />
             </div>
+
             <div className="button-container">
               <button
                 onClick={generateTheory}
@@ -119,6 +140,12 @@ function App()  {
             <p className="response-box">{theory}</p>
           </div>
         )}
+        {showResponse ? (
+          <div>
+            <br></br>
+            <button onClick={startNewTheory} className="button centered-theory-button">New Theory</button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
