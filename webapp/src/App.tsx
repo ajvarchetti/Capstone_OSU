@@ -11,14 +11,37 @@ function App()  {
   const [hasGenerated, setHasGenerated] = useState(false);
   const isButtonDisabled = !input1.trim() || !input2.trim();
 
-  const generateTheory = () => {
-    const newTheory = `What if ${input1} and ${input2} are secretly connected through an ancient organization?`;
-    const title = `${input1} and ${input2}`;
-    setTheory(newTheory);
-    setResponses([...responses, { title, content: newTheory }]);
-    setActiveResponse(responses.length);
-    setShowResponse(true);
-    setHasGenerated(true);
+  const generateTheory = async () => {
+    if (!input1 || !input2) {
+      alert("Please enter two topics.");
+      return;
+    }
+  
+    const query = `${input1},${input2}`;
+    try {
+      const response = await fetch(`http://localhost:5002/generate?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate theory");
+      }
+  
+      const newTheory = data.generated_conspiracy;
+      const title = data.keywords.join(" and ");
+  
+      setTheory(newTheory);
+      setResponses([...responses, { title, content: newTheory }]);
+      setActiveResponse(responses.length);
+      setShowResponse(true);
+      setHasGenerated(true);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("An unknown error occurred.");
+      }
+      console.error("Fetch error:", error);
+    }
   };
 
   const startNewTheory = () => {
