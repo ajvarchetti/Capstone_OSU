@@ -1,42 +1,29 @@
-# DEMO DOCKERFILE: REPLACE WITH ACTUAL DB DOCKERFILE
+FROM python:3.9-slim AS base
 
-### BASE ###
-# Use the official Node image
-FROM alpine:latest as base
+WORKDIR /db
 
-# Copy all application files
-COPY . .
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
+FROM base as with-chrome
 
-### DEVELOPMENT ###
-FROM base as dev
-
-# Expose port for the development server
-# TODO
-
-# Start the database:
-# TODO
-
-
-# Multi-stage docker build (to reduce the size of the final image)
-### BUILD STAGE ###
-# Use the official Node image
-FROM base as build
-
-# Build the application
-# TODO
-
-### TEST STAGE ###
-FROM base as test
-
-# Run tests
-# TODO
-
-
-### PROD STAGE ###
-FROM alpine AS prod
-
-# Expose default NGINX port
-EXPOSE 80
-
-
+# Install chrome and chromedriver for Selenium
+RUN apt-get update -qq -y
+RUN apt-get install zip unzip
+RUN apt-get install -y \
+        libasound2 \
+        libatk-bridge2.0-0 \
+        libgtk-4-1 \
+        libnss3 \
+        xdg-utils \
+        wget
+RUN wget -q -O chrome-linux64.zip https://bit.ly/chrome-linux64-121-0-6167-85
+RUN unzip chrome-linux64.zip
+RUN rm chrome-linux64.zip
+RUN mv chrome-linux64 /opt/chrome/
+RUN ln -s /opt/chrome/chrome /usr/local/bin/
+RUN wget -q -O chromedriver-linux64.zip https://bit.ly/chromedriver-linux64-121-0-6167-85
+RUN unzip -j chromedriver-linux64.zip chromedriver-linux64/chromedriver
+RUN rm chromedriver-linux64.zip
+RUN mv chromedriver /usr/local/bin/
