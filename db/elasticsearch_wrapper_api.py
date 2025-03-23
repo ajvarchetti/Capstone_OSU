@@ -81,6 +81,10 @@ def search_wikipedia(query):
             return None
         
         print(f"✅ Found {len(hits)} results for {query}")
+        for hit in hits:
+            print(f" - {hit['_source']['title']}")
+
+         # Return the first result (or you can modify this to return more)
         return hits[0]["_source"]
     except Exception as e:
         print(f"❌ Elasticsearch error: {e}")
@@ -100,7 +104,7 @@ def generate_conspiracy(keywords, wiki_data):
 
     prompt = f"""
     You are an expert in historical mysteries. Using the following Wikipedia summaries about {', '.join(keywords)},
-    create a fascinating story that connects them.
+    create a fascinating story that connects them. Use a maximum of 8 sentences total for the story.
 
     Wikipedia Data:
     """
