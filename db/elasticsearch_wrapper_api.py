@@ -4,6 +4,7 @@ from elasticsearch import Elasticsearch
 import google.generativeai as genai
 import os
 import time
+from es_gen_models import genV1, esV1, consp_promptV1, genV1
 
 # Configure Elasticsearch
 ES_HOST = os.getenv("ES_HOST", "http://elasticsearch:9200")
@@ -48,100 +49,15 @@ else:
 app = Flask(__name__)
 CORS(app)
 
-def search_wikipedia(query):
-    """
-    Search Wikipedia data in Elasticsearch
-    """
-    print(f"🔍 Searching for: {query}")
-    es_query = {
-        "query": {
-            "bool": {
-                "should": [
-                    {"match": {"title": query}},
-                    {"match": {"wikipedia_content": query}}
-                ]
-            }
-        }
-    }
-    
-    try:
-        if not es or not connected:
-            print("❌ Elasticsearch is not connected.")
-            return None
-
-        if not es.indices.exists(index="wikipedia_conspiracies"):
-            print(f"❌ Index 'wikipedia_conspiracies' does not exist")
-            return None
-            
-        response = es.search(index="wikipedia_conspiracies", query=es_query["query"])
-        hits = response.get("hits", {}).get("hits", [])
-        
-        if not hits:
-            print(f"⚠️ No Wikipedia data found for query: {query}")
-            return None
-        
-        print(f"✅ Found {len(hits)} results for {query}")
-        for hit in hits:
-            print(f" - {hit['_source']['title']}")
-
-         # Return the first result (or you can modify this to return more)
-        return hits[0]["_source"]
-    except Exception as e:
-        print(f"❌ Elasticsearch error: {e}")
-        return None
-
-def generate_conspiracy(keywords, wiki_data):
-    """
-    Use Gemini AI to generate a conspiracy theory
-    """
-    if not GEMINI_API_KEY:
-        return "Error: Gemini API key is not set."
-
-    try:
-        model = genai.GenerativeModel("gemini-1.5-pro")
-    except Exception as e:
-        return f"❌ Error initializing Gemini model: {e}"
-
-    prompt = f"""
-    You are an expert in historical mysteries. Using the following Wikipedia summaries about {', '.join(keywords)},
-    create a fascinating story that connects them. Use a maximum of 8 sentences total for the story.
-
-    Wikipedia Data:
-    """
-    
-    for data in wiki_data:
-        prompt += f"\n- **{data['title']}**: {data.get('wikipedia_content', 'Content not available')}\n"
-    
-    prompt += "Now, craft an engaging and imaginative story that weaves these elements together."
-
-    try:
-        response = model.generate_content(prompt)
-        return response.text if hasattr(response, 'text') else "Error: Invalid response format."
-    except Exception as e:
-        return f"❌ Gemini API error: {e}"
-
+# API Endpoints
 @app.route("/generate", methods=["GET"])
 def generate():
     query = request.args.get("q", "").strip()
-    if not query:
-        return jsonify({"error": "Missing query"}), 400
+    
+    obj = genV1(es, connected, GEMINI_API_KEY, query)
 
-    keywords = [k.strip() for k in query.split(",")]
-    wiki_data = [search_wikipedia(k) for k in keywords if search_wikipedia(k)]
+    return obj
 
-    if not wiki_data:
-        return jsonify({"error": "No Wikipedia data found for the provided keywords"}), 404
-
-    conspiracy_text = generate_conspiracy(keywords, wiki_data)
-
-    return jsonify({
-        "keywords": keywords,
-        "generated_conspiracy": conspiracy_text,
-        "wikipedia_sources": [
-            {"title": d["title"], "url": d.get("source_url", "N/A")} 
-            for d in wiki_data
-        ]
-    })
 
 @app.route("/debug/status", methods=["GET"])
 def debug_status():
