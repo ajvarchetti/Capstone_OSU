@@ -57,9 +57,9 @@ def esV1(es: Elasticsearch, connected: bool, topic: str) -> str:
     es_query = {
         "query": {
             "bool": {
-                "must": [
-                    {"match": {"title": topic}}#,
-                    #{"match": {"wikipedia_content": topic}}
+                "should": [
+                    {"match_phrase": {"title": topic}},
+                    {"match_phrase": {"wikipedia_content": topic}}
                 ]
             }
         }
