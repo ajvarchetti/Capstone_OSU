@@ -4,21 +4,21 @@ import google.generativeai as genai
 
 # Cleans duplicate hits from Elastic Search results based on the title field
 def clean_duplicate_hits(hits):
-    print(hits.type, hits[0].type)
-    unique_hit_titles = {}
+    unique_hit_titles = []
     unique_hits = []
+
     for hit in hits:
-        title = hit["_source"]["title"]
+        title = hit['title']
+        
         if title not in unique_hit_titles:
-            unique_hit_titles[title] = hit
+            unique_hit_titles.append(title)
             unique_hits.append(hit)
 
-    print(f"Cleaned {len(hits) - len(unique_hits)} duplicate hits")
-    print(unique_hits.type, unique_hits[0].type)
+    # print(f"Cleaned {len(hits) - len(unique_hits)} duplicate hits")
     return unique_hits
 
 # Function to call Elasticsearch and return results from a given Query
-def call_es(es: Elasticsearch, connected: bool, topic: str, es_query: dict) -> str:
+def call_es(es: Elasticsearch, connected: bool, topic: str, es_query: dict):
     try:
         if not es or not connected:
             print("❌ Elasticsearch is not connected.")
@@ -29,6 +29,7 @@ def call_es(es: Elasticsearch, connected: bool, topic: str, es_query: dict) -> s
             return None
             
         response = es.search(index="wikipedia_conspiracies", query=es_query["query"])
+        # print(response)
         hits = response.get("hits", {}).get("hits", [])
         
         if not hits:
@@ -39,8 +40,7 @@ def call_es(es: Elasticsearch, connected: bool, topic: str, es_query: dict) -> s
         for hit in hits:
             print(f" - {hit['_source']['title']}")
 
-         # Return the first result (or you can modify this to return more)
-        return hits[0]["_source"]
+        return [hit["_source"] for hit in hits]
     except Exception as e:
         print(f"❌ Elasticsearch error: {e}")
         return None
@@ -68,7 +68,33 @@ def esV1(es: Elasticsearch, connected: bool, topic: str) -> str:
     # is none if ES is not connected or index does not exist
     hits = call_es(es, connected, topic, es_query)
 
-    return hits
+    return hits[0] if hits else None
+
+def esV2(es: Elasticsearch, connected: bool, topic: str) -> str:
+    """
+    Search Wikipedia data in Elasticsearch
+    """
+    print(f"🔍 Searching for: {topic}")
+    es_query = {
+        "query": {
+            "match": {
+                "wikipedia_content": {
+                    "query": " ".join(topic),
+                    "operator": "and",
+                    "fuzziness": 1
+                }
+            }
+        }
+    }
+    
+    # is none if ES is not connected or index does not exist
+    hits = call_es(es, connected, topic, es_query)
+    if hits is not None:
+        hits = clean_duplicate_hits(hits)
+        hits = hits[:10] if len(hits) > 10 else hits
+
+        return hits
+    return None
 
 ## Gemini Prompts
 def consp_promptV1(keywords, wiki_data) -> str:
@@ -109,9 +135,6 @@ def gem_consp(GEMINI_API_KEY, keywords, wiki_data):
 ## Base Generation Models for ES and Gemini API
 
 def genV1(es, connected, GEMINI_API_KEY, query):
-    if not query:
-        return jsonify({"error": "Missing query"}), 400
-
     keywords = [k.strip() for k in query.split(",")]
     wiki_data = [esV1(es, connected, k) for k in keywords if esV1(es, connected, k)]
 
@@ -130,4 +153,27 @@ def genV1(es, connected, GEMINI_API_KEY, query):
             for d in wiki_data
         ]
     })
-    
+
+def genV2(es, connected, GEMINI_API_KEY, query):
+    keywords = [k.strip() for k in query.split(",")]
+    wiki_data = []
+    for k in keywords:
+        data = esV2(es, connected, k)
+        if data is not None:
+            wiki_data.extend(data)
+
+    if not wiki_data:
+        return jsonify({"error": "No Wikipedia data found for the provided keywords"}), 404
+
+    print(f"Retrieved Wikipedia data for keywords: {keywords}")
+    print(f"Wikipedia data: {wiki_data[0]['title']}")
+    conspiracy_text = gem_consp(GEMINI_API_KEY, keywords, wiki_data)
+
+    return jsonify({
+        "keywords": keywords,
+        "generated_conspiracy": conspiracy_text,
+        "wikipedia_sources": [
+            {"title": d["title"], "url": d.get("source_url", "N/A")} 
+            for d in wiki_data
+        ]
+    })

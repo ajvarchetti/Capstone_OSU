@@ -4,7 +4,7 @@ from elasticsearch import Elasticsearch
 import google.generativeai as genai
 import os
 import time
-from es_gen_models import genV1, esV1, consp_promptV1, genV1
+from es_gen_models import genV1, genV2
 
 # Configure Elasticsearch
 ES_HOST = os.getenv("ES_HOST", "http://elasticsearch:9200")
@@ -53,8 +53,11 @@ CORS(app)
 @app.route("/generate", methods=["GET"])
 def generate():
     query = request.args.get("q", "").strip()
+
+    if not query:
+        return jsonify({"error": "Missing query"}), 400
     
-    obj = genV1(es, connected, GEMINI_API_KEY, query)
+    obj = genV2(es, connected, GEMINI_API_KEY, query)
 
     return obj
 
