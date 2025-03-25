@@ -20,9 +20,7 @@ services:
       - ./db/config/.prod.env
 
   update-data:
-    build:
-      context: ./db
-      target: with-chrome
+    image: ghcr.io/ajvarchetti/capstone_osu_data:main
     depends_on:
       - elasticsearch
     env_file:
@@ -35,9 +33,7 @@ services:
             python3 elasticsearch_import.py"
 
   elasticsearch-wrapper-api:
-    build:
-      context: ./db
-      target: base
+    image: ghcr.io/ajvarchetti/capstone_osu_api:main
     ports:
       - "5002:5002"
     depends_on:
