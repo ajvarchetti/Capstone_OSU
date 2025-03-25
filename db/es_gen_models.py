@@ -14,7 +14,7 @@ def clean_duplicate_hits(hits):
             unique_hit_titles.append(title)
             unique_hits.append(hit)
 
-    # print(f"Cleaned {len(hits) - len(unique_hits)} duplicate hits")
+    print(f"Cleaned {len(hits) - len(unique_hits)} duplicate hits")
     return unique_hits
 
 # Function to call Elasticsearch and return results from a given Query
@@ -28,7 +28,7 @@ def call_es(es: Elasticsearch, connected: bool, topic: str, es_query: dict):
             print(f"❌ Index 'wikipedia_conspiracies' does not exist")
             return None
             
-        response = es.search(index="wikipedia_conspiracies", query=es_query["query"])
+        response = es.search(index="wikipedia_conspiracies", query=es_query["query"], size=es_query.get("size", 10))
         # print(response)
         hits = response.get("hits", {}).get("hits", [])
         
@@ -62,33 +62,51 @@ def esV1(es: Elasticsearch, connected: bool, topic: str) -> str:
                     {"match_phrase": {"wikipedia_content": topic}}
                 ]
             }
-        }
+        },
+        "size": 50
     }
+
+    hits = call_es(es, connected, topic, es_query)
     
     # is none if ES is not connected or index does not exist
-    hits = call_es(es, connected, topic, es_query)
+    if hits is not None:
+        hits = clean_duplicate_hits(hits)
+        # hits = hits[:10] if len(hits) > 10 else hits
 
-    return hits[0] if hits else None
+        return hits
+    return None
 
-def esV2(es: Elasticsearch, connected: bool, topic: str) -> str:
+# Finds a topic that is related to another topic
+def esV2(es: Elasticsearch, connected: bool, topic1: str, topic2: str) -> str:
     """
     Search Wikipedia data in Elasticsearch
     """
-    print(f"🔍 Searching for: {topic}")
+    print(f"🔍 Searching for topic between: {topic1} and {topic2}")
     es_query = {
         "query": {
-            "match": {
-                "wikipedia_content": {
-                    "query": topic,
-                    "operator": "and",
-                    "fuzziness": 1
-                }
+            "bool": {
+                "must": [{
+                    "bool": {
+                        "should": [
+                            {"match_phrase": {"title": topic1}},
+                            {"match_phrase": {"wikipedia_content": topic1}}
+                        ]
+                    },
+                    "bool": {
+                        "should": [
+                            {"match_phrase": {"title": topic2}},
+                            {"match_phrase": {"wikipedia_content": topic2}}
+                        ]
+                    }
+                }]
             }
-        }
+        },
+        "size": 50
     }
     
     # is none if ES is not connected or index does not exist
-    hits = call_es(es, connected, topic, es_query)
+    hits = call_es(es, connected, topic1 + " and " + topic2, es_query)
+
     if hits is not None:
         hits = clean_duplicate_hits(hits)
         hits = hits[:10] if len(hits) > 10 else hits
@@ -134,17 +152,11 @@ def gem_consp(GEMINI_API_KEY, keywords, wiki_data):
 
 ## Base Generation Models for ES and Gemini API
 
-def genV1(es, connected, GEMINI_API_KEY, query):
-    keywords = [k.strip() for k in query.split(",")]
-    wiki_data = [esV1(es, connected, k) for k in keywords if esV1(es, connected, k)]
-
-    if not wiki_data:
-        return jsonify({"error": "No Wikipedia data found for the provided keywords"}), 404
-
+def report_es_results(keywords, wiki_data):
     print(f"Retrieved Wikipedia data for keywords: {keywords}")
-    print(f"Wikipedia data: {wiki_data[0]['title']}")
-    conspiracy_text = gem_consp(GEMINI_API_KEY, keywords, wiki_data)
+    print(f"Wikipedia data: {[w['title'] for w in wiki_data]}")
 
+def gen_json_output(keywords, conspiracy_text, wiki_data):
     return jsonify({
         "keywords": keywords,
         "generated_conspiracy": conspiracy_text,
@@ -154,26 +166,52 @@ def genV1(es, connected, GEMINI_API_KEY, query):
         ]
     })
 
-def genV2(es, connected, GEMINI_API_KEY, query):
+def genV1(es, connected, GEMINI_API_KEY, query):
     keywords = [k.strip() for k in query.split(",")]
     wiki_data = []
     for k in keywords:
-        data = esV2(es, connected, k)
-        if data is not None:
-            wiki_data.extend(data)
+        hit = esV1(es, connected, k)
+        if hit is not None:
+            wiki_data.extend(hit)
 
     if not wiki_data:
         return jsonify({"error": "No Wikipedia data found for the provided keywords"}), 404
 
-    print(f"Retrieved Wikipedia data for keywords: {keywords}")
-    print(f"Wikipedia data: {wiki_data[0]['title']}")
+    report_es_results(keywords, wiki_data)
+
     conspiracy_text = gem_consp(GEMINI_API_KEY, keywords, wiki_data)
 
-    return jsonify({
-        "keywords": keywords,
-        "generated_conspiracy": conspiracy_text,
-        "wikipedia_sources": [
-            {"title": d["title"], "url": d.get("source_url", "N/A")} 
-            for d in wiki_data
-        ]
-    })
+    return gen_json_output(keywords, conspiracy_text, wiki_data)
+
+# Takes the two topics and uses a cross-reference search to find a connection
+# Keywords for gemini include the two topics and results from overlapping
+# topics (title or wikipedia_content)
+def genV2(es, connected, GEMINI_API_KEY, query):
+    keywords = [k.strip() for k in query.split(",")]
+
+    if len(keywords) < 2:
+        return jsonify({"error": "Please provide at least two keywords for comparison"}), 400
+    
+    wiki_data = []
+
+    # Check for cross-reference hits first
+    cross_ref_hits = esV2(es, connected, keywords[0], keywords[1])
+    if cross_ref_hits:
+        wiki_data.extend(cross_ref_hits)
+
+    # Add individual hits for each keyword
+    for keyword in keywords:
+        hit = esV1(es, connected, keyword)
+        if hit:
+            wiki_data.extend(hit)
+
+    if not wiki_data:
+        return jsonify({"error": "No Wikipedia data found for the provided keywords"}), 404
+    
+    wiki_data = clean_duplicate_hits(wiki_data)
+
+    report_es_results(keywords, wiki_data)
+
+    conspiracy_text = gem_consp(GEMINI_API_KEY, keywords, wiki_data)
+
+    return gen_json_output(keywords, conspiracy_text, wiki_data)
