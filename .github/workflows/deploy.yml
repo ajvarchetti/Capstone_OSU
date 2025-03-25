@@ -16,8 +16,11 @@ jobs:
   build-db:
     uses: ./.github/workflows/db-docker-publish.yml
 
+  build-data:
+    uses: ./.github/workflows/data-docker-publish.yml
+
   deploy:
-    needs: [build-webapp, build-db]
+    needs: [build-webapp, build-db, build-data]
     runs-on: ubuntu-latest
 
     steps:
