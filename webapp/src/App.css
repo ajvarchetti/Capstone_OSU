@@ -1,3 +1,12 @@
+:root {
+  color-scheme: light !important;
+}
+
+html, body {
+  background-color: white !important;
+  color: black !important;
+}
+
 .container {
   display: flex;
   height: 100vh;
@@ -138,7 +147,15 @@
   background-color: #011f4b
 }
 
+/*
 @media (prefers-color-scheme: dark) {
+  
+
+  * {
+      background-color: inherit !important;
+      color: inherit !important;
+  }
+  /*
   .sidebar {
     background-color: #005b96;
     border-right: 2px solid  #03396c
@@ -167,3 +184,4 @@
     background-color: white
   }
 }
+    */
