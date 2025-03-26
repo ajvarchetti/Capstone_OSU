@@ -46,6 +46,7 @@ FROM nginx:stable-alpine AS prod
 
 # Copy only the files necessary to run the application, and leave behind the build environment
 COPY --from=build /app/dist /usr/share/nginx/html
+COPY ./config/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose default NGINX port
 EXPOSE 80

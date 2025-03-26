@@ -13,11 +13,14 @@ jobs:
   build-webapp:
     uses: ./.github/workflows/webapp-docker-publish.yml
 
-  build-db:
-    uses: ./.github/workflows/db-docker-publish.yml
+  build-api:
+    uses: ./.github/workflows/api-docker-publish.yml
+
+  build-data:
+    uses: ./.github/workflows/data-docker-publish.yml
 
   deploy:
-    needs: [build-webapp, build-db]
+    needs: [build-webapp, build-data, build-api]
     runs-on: ubuntu-latest
 
     steps:
