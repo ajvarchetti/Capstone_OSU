@@ -32,3 +32,4 @@ dist-ssr
 
 # Data
 db/data
+db/__pycache__/
