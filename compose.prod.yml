@@ -10,10 +10,41 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt:ro # Mount SSL certificates
       - ./webapp/config/nginx.conf:/etc/nginx/conf.d/default.conf # Custom NGINX config
 
-  # TODO: Configure these to run the database
-  db-prod:
-    image: ghcr.io/ajvarchetti/capstone_osu_db:main
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
     ports:
-      - "90:80"
+      - "9200:9200"
+    volumes:
+      - ./db/data:/usr/share/elasticsearch/data # Docker volume
     env_file:
       - ./db/config/.prod.env
+
+  update-data:
+    image: ghcr.io/ajvarchetti/capstone_osu_data:main
+    depends_on:
+      - elasticsearch
+    env_file:
+      - ./db/config/.prod.env
+    volumes:
+      - ./db:/db
+    command: >
+      sh -c "python3 download_topviews.py &&
+            python3 download_wiki_articles.py &&
+            python3 elasticsearch_import.py"
+
+  elasticsearch-wrapper-api:
+    image: ghcr.io/ajvarchetti/capstone_osu_api:main
+    ports:
+      - "5002:5002"
+    depends_on:
+      - elasticsearch
+    env_file:
+      - ./db/config/.prod.env
+    volumes:
+      - ./db:/db
+    command: >
+      sh -c "python3 elasticsearch_wrapper_api.py"
