@@ -56,7 +56,8 @@ def process_article(item):
     """Process a single article and fetch Wikipedia content."""
     # Handle both formats: "article" and "label"
     title = item.get("article") or item.get("label")
-
+    views = item.get("views")
+    
     if not title or not isinstance(title, str):
         print(f"⚠️ Skipping invalid article: {item}")
         return None  # Skip invalid data
@@ -72,6 +73,7 @@ def process_article(item):
     print(f"✅ Processed: {title}")
     return {
         "title": title,
+        "views": views,
         "wikipedia_content": wikipedia_content,
         "source_url": source_url
     }
