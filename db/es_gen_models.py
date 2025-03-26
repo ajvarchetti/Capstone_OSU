@@ -47,9 +47,43 @@ def call_es(es: Elasticsearch, connected: bool, topic: str, es_query: dict):
 
 ## Elastic Search Models
 
+# Helper function for below
+def create_span_clause(word: str, field: str, fuzz: int) -> dict:
+    return { 
+        "span_multi": {  
+            "match":{  
+                "fuzzy":{  
+                    field:{  
+                        "value": word,
+                        "fuzziness": fuzz
+                    }
+                }
+            }
+        }
+    }
+
+# Creates the clause necessary for multi-word fuzzy search in ES
+# Fuzz is the number of characters that can be different in the word for a match
+def create_span_near_query(topic: str, field: str, fuzz: int = 2) -> dict:
+    topic_list = topic.split(" ")
+
+    span_dict = {
+        "span_near": {
+            "clauses": [],
+            "slop": 0,
+            "in_order": True
+        }
+    }
+
+    for word in topic_list:
+        span_clause = create_span_clause(word, field, fuzz)
+        span_dict["span_near"]["clauses"].append(span_clause)
+
+    return span_dict
+
 # Take Connection to ES with every function call
 # Takes two topics and returns a list of hits from ES
-def esV1(es: Elasticsearch, connected: bool, topic: str) -> str:
+def esV1(es: Elasticsearch, connected: bool, topic: str, fuzz: int = 2) -> str:
     """
     Search Wikipedia data in Elasticsearch
     """
@@ -58,8 +92,8 @@ def esV1(es: Elasticsearch, connected: bool, topic: str) -> str:
         "query": {
             "bool": {
                 "should": [
-                    {"match_phrase": {"title": topic}},
-                    {"match_phrase": {"wikipedia_content": topic}}
+                    create_span_near_query(topic, "title", fuzz),
+                    create_span_near_query(topic, "wikipedia_content", fuzz)
                 ]
             }
         },
@@ -77,7 +111,7 @@ def esV1(es: Elasticsearch, connected: bool, topic: str) -> str:
     return None
 
 # Finds a topic that is related to another topic
-def esV2(es: Elasticsearch, connected: bool, topic1: str, topic2: str) -> str:
+def esV2(es: Elasticsearch, connected: bool, topic1: str, topic2: str, fuzz: int = 1) -> str:
     """
     Search Wikipedia data in Elasticsearch
     """
@@ -88,14 +122,14 @@ def esV2(es: Elasticsearch, connected: bool, topic1: str, topic2: str) -> str:
                 "must": [{
                     "bool": {
                         "should": [
-                            {"match_phrase": {"title": topic1}},
-                            {"match_phrase": {"wikipedia_content": topic1}}
+                            create_span_near_query(topic1, "title", fuzz),
+                            create_span_near_query(topic1, "wikipedia_content", fuzz)
                         ]
                     },
                     "bool": {
                         "should": [
-                            {"match_phrase": {"title": topic2}},
-                            {"match_phrase": {"wikipedia_content": topic2}}
+                            create_span_near_query(topic2, "title", fuzz),
+                            create_span_near_query(topic2, "wikipedia_content", fuzz)
                         ]
                     }
                 }]
