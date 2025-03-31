@@ -27,6 +27,8 @@ def wait_for_es():
 
 def preprocess_data(data):
     valid_data = []
+    seen_titles = set()
+    
     for item in data:
         try:
             # 允许用 title 作为 label
@@ -34,7 +36,11 @@ def preprocess_data(data):
             if not label or not isinstance(label, str):
                 raise ValueError("Missing 'label' or incorrect format")
 
-            topic = label.replace("_", " ")  # 转换 Wikipedia 页面格式
+            topic = label.lower().replace("_", " ").strip()
+            
+            if topic in seen_titles:
+                continue
+             
             response = requests.get(WIKI_API_URL + topic, timeout=10)
 
             if response.status_code == 200:
@@ -56,6 +62,7 @@ def preprocess_data(data):
                 "wikipedia_content": content,
                 "source_url": url
             })
+            seen_titles.add(topic)
             # 移除每个处理成功的打印
 
         except (ValueError, requests.exceptions.RequestException) as e:
@@ -90,7 +97,16 @@ def import_data():
         return
 
     # Bulk import data
-    actions = [{"_index": INDEX_NAME, "_source": item} for item in data]
+    actions = [
+        {
+            "_op_type": "update",
+            "_index": INDEX_NAME, 
+            "_id": item["title"],
+            "doc": item,
+            "doc_as_upsert": True
+        }
+        for item in data
+    ]
 
     try:
         helpers.bulk(es, actions)

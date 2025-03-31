@@ -18,8 +18,13 @@ function App()  {
     }
   
     const query = `${input1},${input2}`;
+    const apiUrl =
+      process.env.NODE_ENV === "production"
+        ? "https://conspiragen.com/generate"
+        : "http://localhost:5002/generate";
+
     try {
-      const response = await fetch(`http://localhost:5002/generate?q=${encodeURIComponent(query)}`);
+      const response = await fetch(`${apiUrl}?q=${encodeURIComponent(query)}`);
       const data = await response.json();
   
       if (!response.ok) {
