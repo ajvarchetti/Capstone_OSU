@@ -40,7 +40,12 @@ def preprocess_data(data):
             
             if topic in seen_titles:
                 continue
-             
+
+            # Gather and validate views data
+            views = item.get("views", -1)
+            if not isinstance(views, int):
+                views = -1
+
             response = requests.get(WIKI_API_URL + topic, timeout=10)
 
             if response.status_code == 200:
@@ -59,6 +64,7 @@ def preprocess_data(data):
             valid_data.append({
                 "title": topic,
                 "label": label,  # 确保 label 存在
+                "views": views,
                 "wikipedia_content": content,
                 "source_url": url
             })
