@@ -172,8 +172,10 @@ def esV2(es: Elasticsearch, connected: bool, topic1: str, topic2: str, fuzz: int
 ## Gemini Prompts
 def consp_promptV1(keywords, wiki_data) -> str:
     prompt = f"""
-    You are an expert in historical mysteries. Using the following Wikipedia summaries about {', '.join(keywords)},
-    create a fascinating story that connects them. Use a maximum of 8 sentences total for the story.
+    You are an expert in historical mysteries. Using only the information contained in the following Wikipedia 
+    summaries about {', '.join(keywords)}, create a fascinating story that connects them. Use a maximum of 8 
+    sentences total for the story. You may leave out information that is not relevant to the story, but do not 
+    hallucinate false information.
 
     Wikipedia Data:
     """
