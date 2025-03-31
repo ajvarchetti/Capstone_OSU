@@ -81,6 +81,27 @@ def create_span_near_query(topic: str, field: str, fuzz: int = 2) -> dict:
 
     return span_dict
 
+def esField(es: Elasticsearch, connected: bool, topic: str, field: str, fuzz = 1) -> str:
+    print(f"🔍 Searching for: {topic}")
+    es_query = {
+        "query": {
+            "bool": {
+                "should": [
+                    create_span_near_query(topic, field, fuzz),
+                ]
+            }
+        },
+        "size": 50
+    }
+
+    hits = call_es(es, connected, topic, es_query)
+    
+    # is none if ES is not connected or index does not exist
+    if hits is not None:
+        hits = clean_duplicate_hits(hits)
+        return hits
+    return None
+
 # Take Connection to ES with every function call
 # Takes two topics and returns a list of hits from ES
 def esV1(es: Elasticsearch, connected: bool, topic: str, fuzz: int = 2) -> str:
@@ -212,7 +233,6 @@ def genV1(es, connected, GEMINI_API_KEY, query):
         return jsonify({"error": "No Wikipedia data found for the provided keywords"}), 404
 
     report_es_results(keywords, wiki_data)
-
     conspiracy_text = gem_consp(GEMINI_API_KEY, keywords, wiki_data)
 
     return gen_json_output(keywords, conspiracy_text, wiki_data)
@@ -243,9 +263,95 @@ def genV2(es, connected, GEMINI_API_KEY, query):
         return jsonify({"error": "No Wikipedia data found for the provided keywords"}), 404
     
     wiki_data = clean_duplicate_hits(wiki_data)
-
     report_es_results(keywords, wiki_data)
+    conspiracy_text = gem_consp(GEMINI_API_KEY, keywords, wiki_data)
 
+    return gen_json_output(keywords, conspiracy_text, wiki_data)
+
+# Takes two topics and uses a binary search via shared keywords to find a connection.
+# This is recursively repeated until a threshold depth is reached or no more connections are found.
+def genV3(es, connected, GEMINI_API_KEY, query, depth=3):
+    keywords = [k.strip() for k in query.split(",")]
+
+    if len(keywords) < 2:
+        return jsonify({"error": "Please provide at least two keywords for comparison"}), 400
+    
+    wiki_data = []
+
+    # Take care of info regarding each keyword first
+    # Add individual hits for each keyword
+    for keyword in keywords:
+        hit = esField(es, connected, keyword, "title")
+        if hit:
+            wiki_data.append(hit[0]) # Assume the first one the desired topic
+        else:
+            return jsonify({"error": f"⚠️ No hits found for keyword: {keyword} - Exiting Search"}), 400
+
+    # Check for cross-reference hits first
+    # Topic1 is start, Topic2 is end
+    # Goal is to find suitable middle topic that connects the two
+    # DOES NOT CARRY WIKI DATA ATM
+
+    def cross_ref(topic1, topic2, depth, black_list=[]):
+        black_list = black_list.copy()
+        black_list.extend([topic1.lower(), topic2.lower()]) # Add current topics to blacklist to avoid repeats
+
+        # End Case (Please STOP!!!)
+        if depth <= 0:
+            return []
+
+        hits = esV2(es, connected, topic1, topic2)
+
+        # Fail Case (No middle topic found)
+        if not hits:
+            return []
+        
+        # Recursive Case
+        sub_hits = [] # Contains tuples with ([start->middle topics], middle topic, [middle->end topics], total topics)
+        for hit in hits:
+            hit_title = hit['title']
+
+            # Skip if the hit is aready used
+            if hit_title.lower() in black_list:
+                continue
+
+            # start to middle case
+            sm = cross_ref(topic1, hit_title, depth - 1, black_list)
+            sm_titles = [t['title'].lower() for t in sm]
+
+            # middle to end case
+            me = cross_ref(hit_title, topic2, depth - 1, black_list + sm_titles) # Add start->middle to blacklist
+
+            # Add to list
+            sub_hits.append((sm, hit, me, len(sm) + len(me) + 1))
+
+        # Combine all topics in returned object
+        if sub_hits:
+            # Sort by total topics (length of sub_hits) and return the one with the most connections
+            sub_hits.sort(key=lambda x: x[3], reverse=True)
+
+            middle = sub_hits[0][1]
+
+            # Slap together start, start-middle, middle, middle-end, end topics
+            combined_topics = sub_hits[0][0] + [middle] + sub_hits[0][2]
+            return combined_topics
+        
+        # Fails if no sub_hits are found
+        # print(f"⚠️ No sub-hits found in cross-ref for {topic1} and {topic2} - Exiting Search")
+        return []
+
+    cross_ref_hits = cross_ref(keywords[0], keywords[1], depth)
+    if not cross_ref_hits or len(cross_ref_hits) <= 0:
+        # iter hits and try to find sub-hits for each one
+        return jsonify({"error": "⚠️ No cross-reference hits found - Exiting Search"}), 400
+    
+    # tag on first and last keywords
+    cross_ref_hits = [wiki_data[0]] + cross_ref_hits + [wiki_data[1]]
+
+    print(f"🔍 Cross-reference hits found: {[ch['title'] for ch in cross_ref_hits]}")
+    
+    # wiki_data = clean_duplicate_hits(wiki_data)
+    report_es_results(keywords, cross_ref_hits)
     conspiracy_text = gem_consp(GEMINI_API_KEY, keywords, wiki_data)
 
     return gen_json_output(keywords, conspiracy_text, wiki_data)

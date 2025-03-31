@@ -4,7 +4,7 @@ from elasticsearch import Elasticsearch
 import google.generativeai as genai
 import os
 import time
-from es_gen_models import genV1, genV2
+from es_gen_models import genV1, genV2, genV3
 
 # Configure Elasticsearch
 ES_HOST = os.getenv("ES_HOST", "http://elasticsearch:9200")
@@ -57,7 +57,7 @@ def generate():
     if not query:
         return jsonify({"error": "Missing query"}), 400
     
-    obj = genV2(es, connected, GEMINI_API_KEY, query)
+    obj = genV3(es, connected, GEMINI_API_KEY, query)
     # obj = genV1(es, connected, GEMINI_API_KEY, query)
 
     return obj
