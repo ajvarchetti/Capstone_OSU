@@ -205,8 +205,7 @@ def gem_consp(GEMINI_API_KEY, keywords, wiki_data):
     except Exception as e:
         return f"❌ Gemini API error: {e}"
 
-## Base Generation Models for ES and Gemini API
-
+# Helper Functions For ES and Gemini API
 def report_es_results(keywords, wiki_data):
     print(f"Retrieved Wikipedia data for keywords: {keywords}")
     print(f"Wikipedia data: {[w['title'] for w in wiki_data]}")
@@ -220,6 +219,8 @@ def gen_json_output(keywords, conspiracy_text, wiki_data):
             for d in wiki_data
         ]
     })
+
+## Base Generation Models for ES and Gemini API
 
 def genV1(es, connected, GEMINI_API_KEY, query):
     keywords = [k.strip() for k in query.split(",")]
@@ -270,7 +271,7 @@ def genV2(es, connected, GEMINI_API_KEY, query):
 
 # Takes two topics and uses a binary search via shared keywords to find a connection.
 # This is recursively repeated until a threshold depth is reached or no more connections are found.
-def genV3(es, connected, GEMINI_API_KEY, query, depth=3):
+def genV3(es, connected, GEMINI_API_KEY, query, depth=2):
     keywords = [k.strip() for k in query.split(",")]
 
     if len(keywords) < 2:
@@ -290,7 +291,7 @@ def genV3(es, connected, GEMINI_API_KEY, query, depth=3):
     # Check for cross-reference hits first
     # Topic1 is start, Topic2 is end
     # Goal is to find suitable middle topic that connects the two
-    # DOES NOT CARRY WIKI DATA ATM
+    # returns a tuple ([ hits ], views)
 
     def cross_ref(topic1, topic2, depth, black_list=[]):
         black_list = black_list.copy()
@@ -298,13 +299,13 @@ def genV3(es, connected, GEMINI_API_KEY, query, depth=3):
 
         # End Case (Please STOP!!!)
         if depth <= 0:
-            return []
+            return ([], 0)
 
         hits = esV2(es, connected, topic1, topic2)
 
         # Fail Case (No middle topic found)
         if not hits:
-            return []
+            return ([], 0)
         
         # Recursive Case
         sub_hits = [] # Contains tuples with ([start->middle topics], middle topic, [middle->end topics], total topics)
@@ -315,32 +316,45 @@ def genV3(es, connected, GEMINI_API_KEY, query, depth=3):
             if hit_title.lower() in black_list:
                 continue
 
+            # sm and me are both tuples of ([hits], views)
             # start to middle case
-            sm = cross_ref(topic1, hit_title, depth - 1, black_list)
+            (sm, sm_views) = cross_ref(topic1, hit_title, depth - 1, black_list)
             sm_titles = [t['title'].lower() for t in sm]
 
             # middle to end case
-            me = cross_ref(hit_title, topic2, depth - 1, black_list + sm_titles) # Add start->middle to blacklist
+            (me, me_views) = cross_ref(hit_title, topic2, depth - 1, black_list + sm_titles) # Add start->middle to blacklist
 
             # Add to list
-            sub_hits.append((sm, hit, me, len(sm) + len(me) + 1))
+            # test if views is a number, if not set to 0
+            hit_views = hit.get('views', 0) if isinstance(hit.get('views'), int) else 0
+            sub_views = sm_views + me_views + hit_views
+
+            sub_len = len(sm) + len(me) + 1
+            sub_hits.append((sm, hit, me, sub_len, sub_views))
 
         # Combine all topics in returned object
         if sub_hits:
             # Sort by total topics (length of sub_hits) and return the one with the most connections
-            sub_hits.sort(key=lambda x: x[3], reverse=True)
+            # Sort Secondary by views (most popular)
+            sub_hits.sort(key=lambda x: (x[3], x[4]), reverse=True)
 
+            start = sub_hits[0][0]
             middle = sub_hits[0][1]
+            end = sub_hits[0][2]
 
             # Slap together start, start-middle, middle, middle-end, end topics
-            combined_topics = sub_hits[0][0] + [middle] + sub_hits[0][2]
-            return combined_topics
+            combined_topics = start + [middle] + end
+
+            # Sum Views
+            total_views = sub_hits[0][4]
+
+            return (combined_topics, total_views)
         
         # Fails if no sub_hits are found
         # print(f"⚠️ No sub-hits found in cross-ref for {topic1} and {topic2} - Exiting Search")
-        return []
+        return ([], 0)
 
-    cross_ref_hits = cross_ref(keywords[0], keywords[1], depth)
+    (cross_ref_hits, cross_ref_views) = cross_ref(keywords[0], keywords[1], depth)
     if not cross_ref_hits or len(cross_ref_hits) <= 0:
         # iter hits and try to find sub-hits for each one
         return jsonify({"error": "⚠️ No cross-reference hits found - Exiting Search"}), 400
