@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-function App()  {
+function App() {
   const [theory, setTheory] = useState('');
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
@@ -12,6 +12,7 @@ function App()  {
   const [activeResponse, setActiveResponse] = useState<number | null>(null);
   const [showResponse, setShowResponse] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(responses.length > 0);
+  const [isLoading, setIsLoading] = useState(false); // New state for loading
   const isButtonDisabled = !input1.trim() || !input2.trim() || input1.trim().length > 255 || input2.trim().length > 255;
 
   useEffect(() => {
@@ -23,24 +24,25 @@ function App()  {
       alert("Please enter two topics.");
       return;
     }
-  
+
     const query = `${input1},${input2}`;
     const apiUrl =
       process.env.NODE_ENV === "production"
         ? "https://conspiragen.com/generate"
         : "http://localhost:5002/generate";
 
+    setIsLoading(true); // Set loading to true
     try {
       const response = await fetch(`${apiUrl}?q=${encodeURIComponent(query)}`);
       const data = await response.json();
-  
+
       if (!response.ok) {
         throw new Error(data.error || "Failed to generate theory");
       }
-  
+
       const newTheory = data.generated_conspiracy;
       const title = data.keywords.join(" and ");
-  
+
       setTheory(newTheory);
       setResponses([...responses, { title, content: newTheory }]);
       setActiveResponse(responses.length);
@@ -53,6 +55,8 @@ function App()  {
         alert("An unknown error occurred.");
       }
       console.error("Fetch error:", error);
+    } finally {
+      setIsLoading(false); // Set loading to false
     }
   };
 
@@ -77,17 +81,17 @@ function App()  {
           <div>
             <div className="stored-responses-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h2 className="stored-responses" style={{ margin: 0 }}>Stored Responses</h2>
-              <button 
-              onClick={() => {
-                if (window.confirm('Are you sure you want to clear the response history? This action cannot be undone.')) {
-                  clearHistory();
-                }
-              }}
-              title="Clear History" 
-              style={{ background: 'none', border: 'none', cursor: 'pointer'}}
+              <button
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to clear the response history? This action cannot be undone.')) {
+                    clearHistory();
+                  }
+                }}
+                title="Clear History"
+                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
               >🗑️</button>
             </div>
-            <hr className="stored-responses-line"/>
+            <hr className="stored-responses-line" />
             <ul className="response-list" style={{ padding: 0, margin: 0 }}>
               {responses.map((resp, index) => (
                 <li
@@ -95,7 +99,7 @@ function App()  {
                   className={`response-item ${activeResponse === index ? 'active' : ''}`}
                   onClick={() => { setTheory(resp.content); setShowResponse(true); setActiveResponse(index); }}
                   title={resp.title}
-                  style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}
+                  style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                 >
                   {resp.title}
                 </li>
@@ -107,19 +111,17 @@ function App()  {
       )}
 
       <div className="main-content">
-      
-        <img className="main-logo" src="favicon.png"/>
+
+        <img className="main-logo" src="favicon.png" />
 
         <h1 className="title">Conspiragen</h1>
         {!showResponse ? (
-
           <div>
-
             <div className="intro-text">
               <span>To generate a conspiracy theory between two topics, enter the topics in the boxes below!</span>
             </div>
 
-            <div className = "inputs">
+            <div className="inputs">
               <input
                 type="text"
                 value={input1}
@@ -140,13 +142,17 @@ function App()  {
             </div>
 
             <div className="button-container">
-              <button
-                onClick={generateTheory}
-                className={isButtonDisabled ? "button disabled-button" : "button generate-button"}
-                disabled={isButtonDisabled}
-              >
-                Generate Theory
-              </button>
+              {isLoading ? ( // Show loading spinner if loading
+                <div className="spinner"></div>
+              ) : (
+                <button
+                  onClick={generateTheory}
+                  className={isButtonDisabled ? "button disabled-button" : "button generate-button"}
+                  disabled={isButtonDisabled}
+                >
+                  Generate Theory
+                </button>
+              )}
             </div>
           </div>
         ) : (
