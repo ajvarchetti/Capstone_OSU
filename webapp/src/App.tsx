@@ -47,8 +47,19 @@ function App()  {
       {hasGenerated && (
         <div className="sidebar">
           <div>
-            <h2 className="stored-responses">Stored Responses</h2>
-            <hr className="stored-responses-line"></hr>
+            <div className="stored-responses-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h2 className="stored-responses" style={{ margin: 0 }}>Stored Responses</h2>
+              <button 
+              onClick={() => {
+                if (window.confirm('Are you sure you want to clear the response history? This action cannot be undone.')) {
+                  clearHistory();
+                }
+              }}
+              title="Clear History" 
+              style={{ background: 'none', border: 'none', cursor: 'pointer'}}
+              >🗑️</button>
+            </div>
+            <hr className="stored-responses-line"/>
             <ul className="response-list" style={{ padding: 0, margin: 0 }}>
               {responses.map((resp, index) => (
                 <li
@@ -62,9 +73,8 @@ function App()  {
                 </li>
               ))}
             </ul>
-            <button onClick={startNewTheory} className="button new-theory-button">New Theory</button>
           </div>
-          <button onClick={clearHistory} className="button clear-history-button">Clear History</button>
+          <button onClick={startNewTheory} className="button new-theory-button">New Theory</button>
         </div>
       )}
 
