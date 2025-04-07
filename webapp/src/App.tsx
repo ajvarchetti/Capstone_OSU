@@ -18,14 +18,42 @@ function App()  {
     localStorage.setItem("responses", JSON.stringify(responses));
   }, [responses]);
 
-  const generateTheory = () => {
-    const newTheory = `What if ${input1} and ${input2} are secretly connected through an ancient organization?`;
-    const title = `${input1} and ${input2}`;
-    setTheory(newTheory);
-    setResponses([...responses, { title, content: newTheory }]);
-    setActiveResponse(responses.length);
-    setShowResponse(true);
-    setHasGenerated(true);
+  const generateTheory = async () => {
+    if (!input1 || !input2) {
+      alert("Please enter two topics.");
+      return;
+    }
+  
+    const query = `${input1},${input2}`;
+    const apiUrl =
+      process.env.NODE_ENV === "production"
+        ? "https://conspiragen.com/generate"
+        : "http://localhost:5002/generate";
+
+    try {
+      const response = await fetch(`${apiUrl}?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to generate theory");
+      }
+  
+      const newTheory = data.generated_conspiracy;
+      const title = data.keywords.join(" and ");
+  
+      setTheory(newTheory);
+      setResponses([...responses, { title, content: newTheory }]);
+      setActiveResponse(responses.length);
+      setShowResponse(true);
+      setHasGenerated(true);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("An unknown error occurred.");
+      }
+      console.error("Fetch error:", error);
+    }
   };
 
   const startNewTheory = () => {

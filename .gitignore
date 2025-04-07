@@ -30,3 +30,6 @@ dist-ssr
 !*.env.template
 !*.env.*.template
 
+# Data
+db/data
+db/__pycache__/
