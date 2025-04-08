@@ -56,7 +56,7 @@ def process_article(item, retries=5):
     """Process a single article and fetch Wikipedia content with retries."""
     # Handle both formats: "article" and "label"
     title = item.get("article") or item.get("label")
-    views = item.get("views")
+    daily_views = item.get("daily_views")
     
     if not title or not isinstance(title, str):
         print(f"⚠️ Skipping invalid article: {item}")
@@ -72,7 +72,8 @@ def process_article(item, retries=5):
             return {
                 "title": title,
                 "wikipedia_content": wikipedia_content,
-                "source_url": source_url
+                "source_url": source_url,
+                "daily_views": daily_views
             }
         else:
             print(f"⚠️ Attempt {attempt} failed for: {title}")

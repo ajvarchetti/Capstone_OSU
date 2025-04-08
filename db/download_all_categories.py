@@ -24,7 +24,7 @@ def process_massviews(filepath):
         if average > DAILY_VIEW_THRESHOLD:
             thresheld_data.append({
                 "article": label,
-                "views": round(average)
+                "daily_views": round(average)
             })
 
     try:
