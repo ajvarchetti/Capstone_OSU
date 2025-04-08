@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 
 function App()  {
@@ -10,6 +10,7 @@ function App()  {
   const [showResponse, setShowResponse] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
   const isButtonDisabled = !input1.trim() || !input2.trim();
+  const [sampleTopics, setSampleTopics] = useState<string[]>([]);
 
   const generateTheory = async () => {
     if (!input1 || !input2) {
@@ -57,6 +58,47 @@ function App()  {
     setActiveResponse(null);
   };
 
+  useEffect(() => {
+    const fetchSamples = async () => {
+      const apiUrl =
+        process.env.NODE_ENV === "production"
+          ? "https://conspiragen.com/samples"
+          : "http://localhost:5002/samples";
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+  
+        if (!response.ok || !Array.isArray(data)) {
+          throw new Error("Failed to fetch samples or unexpected response format");
+        }
+  
+        setSampleTopics(data); // <- fix here
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          alert(error.message);
+        } else {
+          alert("An unknown error occurred.");
+        }
+        console.error("Fetch error:", error);
+      }
+    };
+  
+    fetchSamples();
+  }, []);
+
+  const fillRandomTopics = () => {
+    const randomIndex1 = Math.floor(Math.random() * sampleTopics.length);
+    let randomIndex2;
+  
+    do {
+      randomIndex2 = Math.floor(Math.random() * sampleTopics.length);
+    } while (randomIndex2 === randomIndex1);
+  
+    setInput1(sampleTopics[randomIndex1]);
+    setInput2(sampleTopics[randomIndex2]);
+  }
+  
+
   return (
     <div className="container">
       {hasGenerated && (
@@ -86,6 +128,7 @@ function App()  {
       <img className="main-logo" src="favicon.png"/>
 
       <h1 className="title">Conspiragen</h1>
+      
         {!showResponse ? (
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
@@ -116,6 +159,9 @@ function App()  {
               >
                 Generate Theory
               </button>
+            </div>
+            <div className="button-container">
+              <button onClick={fillRandomTopics} className="button random-button">Fill Random Topics</button>
             </div>
           </div>
         ) : (

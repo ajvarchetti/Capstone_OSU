@@ -62,6 +62,24 @@ def generate():
 
     return obj
 
+@app.route("/samples", methods=["GET"])
+def getSamples():
+    numTopics = 10  # Default number of topics to fetch
+
+    try:
+        response = es.search(
+            index="wikipedia_conspiracies",
+            body={
+                "size": numTopics,
+                "_source": ["title"],
+                "query": {"match_all": {}}
+            }
+        )
+        samples = [hit["_source"]["title"] for hit in response["hits"]["hits"]]
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch samples: {str(e)}"}), 500
+
+    return jsonify(samples)
 
 @app.route("/debug/status", methods=["GET"])
 def debug_status():

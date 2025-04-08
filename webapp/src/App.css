@@ -81,6 +81,11 @@
   color: black; 
 }
 
+.random-button {
+  background-color: #005b96;
+  color: black; 
+}
+
 .disabled-button {
     background-color: #9ca3af;
     color: #4b5563;
