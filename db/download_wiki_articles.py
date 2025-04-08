@@ -2,11 +2,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import requests
 import os
+import time
 
 # Read the original data file
-DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-INPUT_FILE = os.path.join(DATA_FOLDER, "topviews.json")
-OUTPUT_FILE = os.path.join(DATA_FOLDER, "wiki_articles.json")
+INPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data\\massviews")
+OUTPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data\\articles")
 
 # Wikipedia API endpoints
 WIKI_SUMMARY_API = "https://en.wikipedia.org/api/rest_v1/page/summary/"
@@ -52,8 +52,8 @@ def fetch_wikipedia_content(title):
 
     return "No content available.", page_url
 
-def process_article(item):
-    """Process a single article and fetch Wikipedia content."""
+def process_article(item, retries=5):
+    """Process a single article and fetch Wikipedia content with retries."""
     # Handle both formats: "article" and "label"
     title = item.get("article") or item.get("label")
 
@@ -63,26 +63,33 @@ def process_article(item):
 
     title = title.replace("_", " ")  # Convert to Wikipedia page format
 
-    wikipedia_content, source_url = fetch_wikipedia_content(title)
+    for attempt in range(1, retries + 1):
+        wikipedia_content, source_url = fetch_wikipedia_content(title)
 
-    if wikipedia_content == "No content available.":
-        print(f"⚠️ No Wikipedia content found for: {title}")
-        return None  # Skip entries with no Wikipedia data
+        if wikipedia_content != "No content available.":
+            print(f"✅ Processed: {title}")
+            return {
+                "title": title,
+                "wikipedia_content": wikipedia_content,
+                "source_url": source_url
+            }
+        else:
+            print(f"⚠️ Attempt {attempt} failed for: {title}")
+            if attempt < retries:
+                time.sleep(6.0) # Wait before retrying (api seems to occasionally blackout for a few seconds)
+                print(f"🔄 Retrying for: {title}...")
 
-    print(f"✅ Processed: {title}")
-    return {
-        "title": title,
-        "wikipedia_content": wikipedia_content,
-        "source_url": source_url
-    }
+    print(f"❌ All {retries} attempts failed for: {title}")
+    return None  # Skip entries after exhausting retries
 
-def main():
+def download_articles_for_category(input_file_path):
+    output_file_path = os.path.join(OUTPUT_FOLDER, os.path.basename(input_file_path))
     try:
-        with open(INPUT_FILE, "r", encoding="utf-8") as f:
+        with open(input_file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        print(f"📂 Loaded {len(data)} entries from {INPUT_FILE}")
+        print(f"📂 Loaded {len(data)} entries from {os.path.basename(input_file_path)}")
     except (FileNotFoundError, json.JSONDecodeError):
-        print(f"❌ Error: File {INPUT_FILE} not found or not valid JSON!")
+        print(f"❌ Error: File {input_file_path} not found or not valid JSON!")
         return
 
     articles = []
@@ -99,11 +106,19 @@ def main():
                 articles.append(result)
 
     if articles:
-        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        with open(output_file_path, "w", encoding="utf-8") as f:
             json.dump(articles, f, indent=4, ensure_ascii=False)
-        print(f"\n🎉 Wiki Download complete! Data saved to {OUTPUT_FILE}")
+        print(f"\n🎉 Wiki Download complete! Data saved to {os.path.basename(output_file_path)}")
     else:
         print("❌ No valid data found, output file is empty!")
+
+def main():
+    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+
+    for filename in os.listdir(INPUT_FOLDER):
+        if filename.endswith(".json"):
+            input_file_path = os.path.join(INPUT_FOLDER, filename)
+            download_articles_for_category(input_file_path)
 
 if __name__ == "__main__":
     print("Starting data download...")
