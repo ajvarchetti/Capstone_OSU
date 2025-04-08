@@ -102,6 +102,11 @@ function App()  {
                 placeholder="First Entity" 
                 className="input-field"
                 style={{ margin: '0 8px' }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isButtonDisabled) {
+                    generateTheory();
+                  }
+                }}
               />
               <span>and</span>
               <input 
@@ -111,6 +116,11 @@ function App()  {
                 placeholder="Second Entity" 
                 className="input-field"
                 style={{ margin: '0 8px' }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isButtonDisabled) {
+                    generateTheory();
+                  }
+                }}
               />
             </div>
             <div className="button-container">
