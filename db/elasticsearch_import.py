@@ -10,7 +10,7 @@ if not ES_HOST:
     raise EnvironmentError("The environment variable 'ES_HOST' is not set. Do you have a .env file?")
 
 INDEX_NAME = "wikipedia"
-DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data\\articles\\")
+DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/articles")
 # Wait for Elasticsearch to start
 def wait_for_es():
     while True:

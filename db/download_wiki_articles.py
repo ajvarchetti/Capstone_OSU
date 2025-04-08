@@ -5,8 +5,8 @@ import os
 import time
 
 # Read the original data file
-INPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data\\massviews")
-OUTPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data\\articles")
+INPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/massviews")
+OUTPUT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/articles")
 
 # Wikipedia API endpoints
 WIKI_SUMMARY_API = "https://en.wikipedia.org/api/rest_v1/page/summary/"

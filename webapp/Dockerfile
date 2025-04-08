@@ -26,13 +26,13 @@ CMD ["npm", "run", "dev"]
 # Multi-stage docker build (to reduce the size of the final image)
 ### BUILD STAGE ###
 # Use the official Node image
-FROM base as build
+FROM base AS build
 
 # Build the application
 RUN npm run build
 
 ### TEST STAGE ###
-FROM base as test
+FROM base AS test
 
 # Copy the built application
 COPY --from=build /app /app

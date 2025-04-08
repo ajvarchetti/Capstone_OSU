@@ -49,6 +49,74 @@ else:
 app = Flask(__name__)
 CORS(app)
 
+def search_wikipedia(query):
+    """
+    Search Wikipedia data in Elasticsearch
+    """
+    print(f"🔍 Searching for: {query}")
+    es_query = {
+        "query": {
+            "bool": {
+                "should": [
+                    {"match": {"title": query}},
+                    {"match": {"wikipedia_content": query}}
+                ]
+            }
+        }
+    }
+    
+    try:
+        if not es or not connected:
+            print("❌ Elasticsearch is not connected.")
+            return None
+
+        if not es.indices.exists(index="wikipedia"):
+            print(f"❌ Index 'wikipedia' does not exist")
+            return None
+            
+        response = es.search(index="wikipedia", query=es_query["query"])
+        hits = response.get("hits", {}).get("hits", [])
+        
+        if not hits:
+            print(f"⚠️ No Wikipedia data found for query: {query}")
+            return None
+        
+        print(f"✅ Found {len(hits)} results for {query}")
+        return hits[0]["_source"]
+    except Exception as e:
+        print(f"❌ Elasticsearch error: {e}")
+        return None
+
+def generate_conspiracy(keywords, wiki_data):
+    """
+    Use Gemini AI to generate a conspiracy theory
+    """
+    if not GEMINI_API_KEY:
+        return "Error: Gemini API key is not set."
+
+    try:
+        model = genai.GenerativeModel("gemini-1.5-pro")
+    except Exception as e:
+        return f"❌ Error initializing Gemini model: {e}"
+
+    prompt = f"""
+    You are an expert in historical mysteries. Using the following Wikipedia summaries about {', '.join(keywords)},
+    create a fascinating story that connects them.
+
+    Wikipedia Data:
+    """
+    
+    for data in wiki_data:
+        prompt += f"\n- **{data['title']}**: {data.get('wikipedia_content', 'Content not available')}\n"
+    
+    prompt += "Now, craft an engaging and imaginative story that weaves these elements together."
+
+    try:
+        response = model.generate_content(prompt)
+        return response.text if hasattr(response, 'text') else "Error: Invalid response format."
+    except Exception as e:
+        return f"❌ Gemini API error: {e}"
+
 # API Endpoints
 @app.route("/generate", methods=["GET"])
 def generate():
@@ -88,12 +156,12 @@ def debug_status():
         ping_response = es.ping()
         status["elasticsearch"]["connected"] = bool(ping_response)
 
-        index_exists_response = es.indices.exists(index="wikipedia_conspiracies")
+        index_exists_response = es.indices.exists(index="wikipedia")
         status["elasticsearch"]["index_exists"] = bool(index_exists_response)
 
         # Only fetch document count if the index truly exists
         if status["elasticsearch"]["index_exists"]:
-            count_resp = es.count(index="wikipedia_conspiracies")
+            count_resp = es.count(index="wikipedia")
             status["elasticsearch"]["document_count"] = count_resp.get("count", 0)
 
     except Exception as e:
