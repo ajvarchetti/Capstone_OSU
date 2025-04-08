@@ -12,6 +12,7 @@
     "docker:npm-install": "docker compose -f ../compose.npm-install.yml run --rm webapp-npm-install"
   },
   "dependencies": {
+    "dompurify": "^3.2.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
