@@ -69,11 +69,11 @@ def search_wikipedia(query):
             print("❌ Elasticsearch is not connected.")
             return None
 
-        if not es.indices.exists(index="wikipedia_conspiracies"):
-            print(f"❌ Index 'wikipedia_conspiracies' does not exist")
+        if not es.indices.exists(index="wikipedia"):
+            print(f"❌ Index 'wikipedia' does not exist")
             return None
             
-        response = es.search(index="wikipedia_conspiracies", query=es_query["query"])
+        response = es.search(index="wikipedia", query=es_query["query"])
         hits = response.get("hits", {}).get("hits", [])
         
         if not hits:
@@ -164,12 +164,12 @@ def debug_status():
         ping_response = es.ping()
         status["elasticsearch"]["connected"] = bool(ping_response)
 
-        index_exists_response = es.indices.exists(index="wikipedia_conspiracies")
+        index_exists_response = es.indices.exists(index="wikipedia")
         status["elasticsearch"]["index_exists"] = bool(index_exists_response)
 
         # Only fetch document count if the index truly exists
         if status["elasticsearch"]["index_exists"]:
-            count_resp = es.count(index="wikipedia_conspiracies")
+            count_resp = es.count(index="wikipedia")
             status["elasticsearch"]["document_count"] = count_resp.get("count", 0)
 
     except Exception as e:

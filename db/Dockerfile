@@ -6,7 +6,7 @@ WORKDIR /db
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-FROM base as with-chrome
+FROM base AS with-chrome
 
 # Install chrome and chromedriver for Selenium
 RUN apt-get update -qq -y

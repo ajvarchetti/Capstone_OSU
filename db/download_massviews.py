@@ -11,14 +11,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 # Ensure the download folder is ajacent to this script
-DOWNLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data\\massviews")
+DOWNLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/massviews")
 START_DATE = "2024-01-01"
 END_DATE = "2025-01-01"
 
 def setup_driver():
     """Configure Chrome driver with headless mode"""
     chrome_options = Options()
-    # chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--window-size=1920,1080")

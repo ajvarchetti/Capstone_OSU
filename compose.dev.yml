@@ -37,7 +37,7 @@ services:
     volumes:
       - ./db:/db
     command: >
-      sh -c "python3 download_topviews.py &&
+      sh -c "python3 download_all_categories.py &&
             python3 download_wiki_articles.py &&
             python3 elasticsearch_import.py"
 
