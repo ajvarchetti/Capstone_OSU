@@ -37,6 +37,9 @@ def create_index_with_mapping(es, index_name):
                 },
                 "source_url": {
                     "type": "keyword"
+                },
+                "daily_views": {
+                    "type": "integer"
                 }
             }
         }
