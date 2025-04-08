@@ -9,13 +9,16 @@ function App()  {
   const [activeResponse, setActiveResponse] = useState<number | null>(null);
   const [showResponse, setShowResponse] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
-  const isButtonDisabled = !input1.trim() || !input2.trim();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const isButtonDisabled = !input1.trim() || !input2.trim() || isProcessing;
 
   const generateTheory = async () => {
     if (!input1 || !input2) {
       alert("Please enter two topics.");
       return;
     }
+
+    setIsProcessing(true);
   
     const query = `${input1},${input2}`;
     const apiUrl =
@@ -46,6 +49,8 @@ function App()  {
         alert("An unknown error occurred.");
       }
       console.error("Fetch error:", error);
+    } finally {
+      setIsProcessing(false); 
     }
   };
 
