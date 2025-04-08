@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./App.css";
+import DOMPurify from 'dompurify';
 
 function App()  {
   const [theory, setTheory] = useState('');
@@ -62,12 +63,18 @@ function App()  {
     setActiveResponse(null);
   };
 
+  const sanitizeInput = (input: string): string => {
+    let sanitized = DOMPurify.sanitize(input.trim()); 
+    return sanitized.replace(/[^a-zA-Z0-9\s]/g, "").slice(0, 50);
+};
+
   return (
     <div className="container">
       {hasGenerated && (
         <div className="sidebar">
           <div>
             <h2 className="stored-responses">Stored Responses</h2>
+            <hr className="stored-responses-line"></hr>
             <ul className="response-list" style={{ padding: 0, margin: 0 }}>
               {responses.map((resp, index) => (
                 <li 
@@ -92,37 +99,43 @@ function App()  {
 
       <h1 className="title">Conspiragen</h1>
         {!showResponse ? (
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <span>Generate Conspiracy Theory between</span>
+
+          <div>
+
+            <div className="intro-text">
+              <span>To generate a conspiracy theory between two topics, enter the topics in the boxes below!</span>
+            </div>
+
+            <div className = "inputs">
               <input 
-                type="text" 
-                value={input1} 
-                onChange={(e) => setInput1(e.target.value)} 
-                placeholder="First Entity" 
-                className="input-field"
-                style={{ margin: '0 8px' }}
-                onKeyDown={(e) => {
+                  type="text" 
+                  value={input1} 
+                  onChange={(e) => setInput1(sanitizeInput(e.target.value))} 
+                  placeholder="First Topic" 
+                  className="input-field"
+                  style={{ margin: '0 32px' }}
+                  onKeyDown={(e) => {
                   if (e.key === "Enter" && !isButtonDisabled) {
                     generateTheory();
                   }
                 }}
               />
-              <span>and</span>
+
               <input 
-                type="text" 
-                value={input2} 
-                onChange={(e) => setInput2(e.target.value)} 
-                placeholder="Second Entity" 
-                className="input-field"
-                style={{ margin: '0 8px' }}
-                onKeyDown={(e) => {
+                  type="text" 
+                  value={input2} 
+                  onChange={(e) => setInput2(sanitizeInput(e.target.value))} 
+                  placeholder="Second Topic" 
+                  className="input-field"
+                  style={{ margin: '0 32px' }}
+                  onKeyDown={(e) => {
                   if (e.key === "Enter" && !isButtonDisabled) {
                     generateTheory();
                   }
                 }}
               />
             </div>
+
             <div className="button-container">
               <button
                 onClick={generateTheory}
