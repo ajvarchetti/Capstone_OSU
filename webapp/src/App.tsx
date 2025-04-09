@@ -12,9 +12,9 @@ function App() {
   });
   const [activeResponse, setActiveResponse] = useState<number | null>(null);
   const [showResponse, setShowResponse] = useState(false);
-  const [hasGenerated, setHasGenerated] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(responses.length > 0);
   const [isLoading, setIsLoading] = useState(false);
-  const isButtonDisabled = !input1.trim() || !input2.trim();
+  const isButtonDisabled = !input1.trim() || !input2.trim() || input1 == input2;
   const [sampleTopics, setSampleTopics] = useState<string[]>([]);
   useEffect(() => {
     localStorage.setItem("responses", JSON.stringify(responses));
