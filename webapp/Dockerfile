@@ -37,8 +37,8 @@ FROM base as test
 # Copy the built application
 COPY --from=build /app /app
 
-# Run tests
-CMD ["npm", "test"]
+# Run tests directly with vitest instead of using npm test
+CMD ["npx", "vitest", "run"]
 
 
 ### PROD STAGE ###
