@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./App.css";
+import DOMPurify from 'dompurify';
 
 function App() {
   const [theory, setTheory] = useState('');
@@ -68,6 +69,11 @@ function App() {
     setActiveResponse(null);
   };
 
+  const sanitizeInput = (input: string): string => {
+    let sanitized = DOMPurify.sanitize(input.trim()); 
+    return sanitized.replace(/[^a-zA-Z0-9\s]/g, "").slice(0, 50);
+};
+
   const clearHistory = () => {
     setResponses([]); // Reset state
     localStorage.removeItem("responses"); // Clear localStorage
@@ -121,24 +127,24 @@ function App() {
               <span>To generate a conspiracy theory between two topics, enter the topics in the boxes below!</span>
             </div>
 
-            <div className="inputs">
-              <input
-                type="text"
-                value={input1}
-                onChange={(e) => setInput1(e.target.value)}
-                placeholder="First Topic"
-                className="input-field"
-                style={{ margin: '0 32px' }}
-              />
+            <div className = "inputs">
+              <input 
+                  type="text" 
+                  value={input1} 
+                  onChange={(e) => setInput1(sanitizeInput(e.target.value))} 
+                  placeholder="First Topic" 
+                  className="input-field"
+                  style={{ margin: '0 32px' }}
+                />
 
-              <input
-                type="text"
-                value={input2}
-                onChange={(e) => setInput2(e.target.value)}
-                placeholder="Second Topic"
-                className="input-field"
-                style={{ margin: '0 32px' }}
-              />
+              <input 
+                  type="text" 
+                  value={input2} 
+                  onChange={(e) => setInput2(sanitizeInput(e.target.value))} 
+                  placeholder="Second Topic" 
+                  className="input-field"
+                  style={{ margin: '0 32px' }}
+                />
             </div>
 
             <div className="button-container">

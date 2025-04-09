@@ -1,3 +1,12 @@
+:root {
+  color-scheme: light !important;
+}
+
+html, body {
+  background-color: white !important;
+  color: black !important;
+}
+
 .container {
   display: flex;
   height: 100vh;
@@ -157,41 +166,4 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #011f4b;
-  }
-  .sidebar {
-    background-color: #03396c;
-    border-right: 2px solid #03396c
-  }
-  .new-theory-button {
-    background-color: #3b82f6;
-    color: white;
-  }
-  .centered-theory-button {
-    background-color: #005b96;
-    color: white;
-  }
-  .response-box {
-    background-color: #6497b1;
-    color: black;
-  }
-  .response-item {
-    color: white;
-    background-color: #6497b1;
-  }
-  .response-item.active {
-    background-color: #b3cde0;
-    border: 2px solid white;
-    color: black
-  }
-  .stored-responses {
-    color: white;
-  }
-  .stored-responses-line{
-    background-color: white
-  }
 }
