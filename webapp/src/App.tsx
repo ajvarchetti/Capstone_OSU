@@ -72,7 +72,7 @@ function App()  {
           throw new Error("Failed to fetch samples or unexpected response format");
         }
   
-        setSampleTopics(data); // <- fix here
+        setSampleTopics(data); 
       } catch (error: unknown) {
         if (error instanceof Error) {
           alert(error.message);

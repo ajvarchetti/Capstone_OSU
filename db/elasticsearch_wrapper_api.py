@@ -66,6 +66,14 @@ def generate():
 def getSamples():
     numTopics = 10  # Default number of topics to fetch
 
+    if not es or not connected:
+        print("❌ Elasticsearch is not connected.")
+        return None
+
+    if not es.indices.exists(index="wikipedia_conspiracies"):
+        print(f"❌ Index 'wikipedia_conspiracies' does not exist")
+        return None
+
     try:
         response = es.search(
             index="wikipedia_conspiracies",
