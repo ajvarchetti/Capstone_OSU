@@ -187,6 +187,43 @@ def consp_promptV1(keywords, wiki_data) -> str:
 
     return prompt
 
+# Utilize Tree of Thoughts Prompting 
+def consp_promptV2(keywords, wiki_data) -> str:
+    prompt = f"""
+    Imagine there are five experts on creating concise conspiracy theories. They all sit in a room, 
+    collaborating on a response to this prompt. They each write a draft of their thinking based on 
+    the provided Wikipedia summaries. Then they all share with the group of other experts. With each 
+    iteration, they will refine their responses based on the feedback of the other experts and how well 
+    it follows the rules of the prompt. The rules are absolute and must be followed. This process of 
+    draft and revision is iterated several times. At the end, before, they will review all their 
+    responses to the prompt and select the most compelling one. The response they select will then be 
+    condensed into a single concise conspiracy theory that is no more than 8 sentences long. This 
+    agreed upon conspiracy is the only thing that will be returned to the user.
+
+    Both of these keywords will be used below in the rules
+    KEYWORD1: {keywords[0]}
+    KEYWORD2: {keywords[-1]}
+
+    The rules for each expert conspiracy author are as follows:
+    1. You may ONLY use information contained in the provided Wikipedia summaries.
+    2. Your conspiracy must not agree with commonly accepted historical narratives.
+    3. The conspiracy must begin with either the topic KEYWORD1 or the topic KEYWORD2.
+    4. The conspiracy must use KEYWORD1 and KEYWORD2 as key elements in the story.
+    5. Facts and timelines must be consistent with the provided Wikipedia summaries but may be miss-interpreted.
+    6. The conspiracy must be non-falsifiable and open to interpretation.
+    7. The conspiracy must cite statistics found in a wikipedia summary at least once
+    8. The conspiracy must have a timeline of events
+    9. Sentences should not be run-on.
+
+    Wikipedia Summaries:
+    """
+
+    for data in wiki_data:
+        prompt += f"\n- **{data['title']}**: {data.get('wikipedia_content', 'Content not available')}\n"
+
+    return prompt
+
+
 def gem_consp(GEMINI_API_KEY, keywords, wiki_data):
     """
     Use Gemini AI to generate a conspiracy theory
@@ -199,7 +236,7 @@ def gem_consp(GEMINI_API_KEY, keywords, wiki_data):
     except Exception as e:
         return f"❌ Error initializing Gemini model: {e}"
 
-    prompt = consp_promptV1(keywords, wiki_data)
+    prompt = consp_promptV2(keywords, wiki_data)
 
     try:
         response = model.generate_content(prompt)
