@@ -12,10 +12,10 @@ function App() {
   });
   const [activeResponse, setActiveResponse] = useState<number | null>(null);
   const [showResponse, setShowResponse] = useState(false);
-  const [hasGenerated, setHasGenerated] = useState(responses.length > 0);
-  const [isLoading, setIsLoading] = useState(false); // New state for loading
-  const isButtonDisabled = !input1.trim() || !input2.trim() || input1.trim().length > 255 || input2.trim().length > 255;
-
+  const [hasGenerated, setHasGenerated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const isButtonDisabled = !input1.trim() || !input2.trim();
+  const [sampleTopics, setSampleTopics] = useState<string[]>([]);
   useEffect(() => {
     localStorage.setItem("responses", JSON.stringify(responses));
   }, [responses]);
@@ -80,6 +80,47 @@ function App() {
     setHasGenerated(false); // Hide sidebar
   };
 
+  useEffect(() => {
+    const fetchSamples = async () => {
+      const apiUrl =
+        process.env.NODE_ENV === "production"
+          ? "https://conspiragen.com/samples"
+          : "http://localhost:5002/samples";
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+  
+        if (!response.ok || !Array.isArray(data)) {
+          throw new Error("Failed to fetch samples or unexpected response format");
+        }
+  
+        setSampleTopics(data); 
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          alert(error.message);
+        } else {
+          alert("An unknown error occurred.");
+        }
+        console.error("Fetch error:", error);
+      }
+    };
+  
+    fetchSamples();
+  }, []);
+
+  const fillRandomTopics = () => {
+    const randomIndex1 = Math.floor(Math.random() * sampleTopics.length);
+    let randomIndex2;
+  
+    do {
+      randomIndex2 = Math.floor(Math.random() * sampleTopics.length);
+    } while (randomIndex2 === randomIndex1);
+  
+    setInput1(sampleTopics[randomIndex1]);
+    setInput2(sampleTopics[randomIndex2]);
+  }
+  
+
   return (
     <div className="container">
       {hasGenerated && (
@@ -120,7 +161,8 @@ function App() {
 
         <img className="main-logo" src="favicon.png" />
 
-        <h1 className="title">Conspiragen</h1>
+      <h1 className="title">Conspiragen</h1>
+      
         {!showResponse ? (
           <div>
             <div className="intro-text">
@@ -148,7 +190,7 @@ function App() {
             </div>
 
             <div className="button-container">
-              {isLoading ? ( // Show loading spinner if loading
+              {isLoading ? ( 
                 <div className="spinner"></div>
               ) : (
                 <button
@@ -159,6 +201,12 @@ function App() {
                   Generate Theory
                 </button>
               )}
+            </div>
+            <div className="button-container">
+              <button onClick={fillRandomTopics} className="button random-button">Fill Random Topics</button>
+            </div>
+            <div className="button-container">
+              <button onClick={fillRandomTopics} className="button random-button">Fill Random Topics</button>
             </div>
           </div>
         ) : (

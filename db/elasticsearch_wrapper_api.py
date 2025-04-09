@@ -62,6 +62,32 @@ def generate():
 
     return obj
 
+@app.route("/samples", methods=["GET"])
+def getSamples():
+    numTopics = 10  # Default number of topics to fetch
+
+    if not es or not connected:
+        print("❌ Elasticsearch is not connected.")
+        return None
+
+    if not es.indices.exists(index="wikipedia_conspiracies"):
+        print(f"❌ Index 'wikipedia_conspiracies' does not exist")
+        return None
+
+    try:
+        response = es.search(
+            index="wikipedia_conspiracies",
+            body={
+                "size": numTopics,
+                "_source": ["title"],
+                "query": {"match_all": {}}
+            }
+        )
+        samples = [hit["_source"]["title"] for hit in response["hits"]["hits"]]
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch samples: {str(e)}"}), 500
+
+    return jsonify(samples)
 
 @app.route("/debug/status", methods=["GET"])
 def debug_status():

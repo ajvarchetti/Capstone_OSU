@@ -92,10 +92,27 @@ html, body {
   border: 1px solid #d1d5db;
   padding: 0.5rem;
   border-radius: 0.25rem;
-  margin: 0.5rem 0; 
-  text-align: center; 
+  margin: 0.5rem 0; /* Spacing between inputs */
+  text-align: center; /* Centering input text */
 }
 
+.generate-button {
+  background-color: #005b96;
+  color: white; 
+}
+
+.random-button {
+  background-color: #005b96;
+  color: black; 
+}
+
+.disabled-button {
+    background-color: #9ca3af;
+    color: #4b5563;
+    cursor: not-allowed;
+    border: 2px solid #6b7280;
+    opacity: 0.6; 
+}
 .response-box {
   border: 1px solid #d1d5db;
   padding: 1rem;
