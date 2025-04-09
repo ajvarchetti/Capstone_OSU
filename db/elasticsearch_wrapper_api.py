@@ -64,7 +64,7 @@ def generate():
 
 @app.route("/samples", methods=["GET"])
 def getSamples():
-    numTopics = 10  # Default number of topics to fetch
+    numTopics = 50  # Default number of topics to fetch
 
     if not es or not connected:
         print("❌ Elasticsearch is not connected.")

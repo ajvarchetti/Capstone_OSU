@@ -203,10 +203,11 @@ function App() {
               )}
             </div>
             <div className="button-container">
-              <button onClick={fillRandomTopics} className="button random-button">Fill Random Topics</button>
-            </div>
-            <div className="button-container">
-              <button onClick={fillRandomTopics} className="button random-button">Fill Random Topics</button>
+              {isLoading ? ( 
+                null
+              ) : (
+                <button onClick={fillRandomTopics} className="button random-button">Fill Random Topics</button>
+              )}
             </div>
           </div>
         ) : (

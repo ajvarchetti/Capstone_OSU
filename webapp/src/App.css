@@ -103,7 +103,7 @@ html, body {
 
 .random-button {
   background-color: #005b96;
-  color: black; 
+  color: white; 
 }
 
 .disabled-button {
@@ -159,15 +159,6 @@ html, body {
   height: 2px;
   border: none;
   background-color: #011f4b
-}
-
-.clear-history-button {
-  background-color: #ff4d4d;
-  color: white;
-}
-
-.clear-history-button:hover {
-  background-color: #cc0000;
 }
 
 .spinner {
