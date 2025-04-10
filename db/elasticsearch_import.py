@@ -9,10 +9,8 @@ ES_HOST = os.getenv("ES_HOST")
 if not ES_HOST:
     raise EnvironmentError("The environment variable 'ES_HOST' is not set. Do you have a .env file?")
 
-INDEX_NAME = "wikipedia_conspiracies"
-WIKI_API_URL = "https://en.wikipedia.org/api/rest_v1/page/summary/"
-DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-DATA_FILE = os.path.join(DATA_FOLDER, "wiki_articles.json")
+INDEX_NAME = "wikipedia"
+DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/articles")
 # Wait for Elasticsearch to start
 def wait_for_es():
     while True:
@@ -25,103 +23,74 @@ def wait_for_es():
             print(f"Waiting for Elasticsearch to start... Error: {e}")
         time.sleep(5)
 
-def preprocess_data(data):
-    valid_data = []
-    seen_titles = set()
-    
-    for item in data:
-        try:
-            # 允许用 title 作为 label
-            label = item.get("label") or item.get("title")
-            if not label or not isinstance(label, str):
-                raise ValueError("Missing 'label' or incorrect format")
+def create_index_with_mapping(es, index_name):
+    mapping = {
+        "mappings": {
+            "properties": {
+                "title": {
+                    "type": "text",
+                    "analyzer": "standard"
+                },
+                "content": {
+                    "type": "text",
+                    "analyzer": "english"  # Use the English analyzer for better text analysis
+                },
+                "source_url": {
+                    "type": "keyword"
+                },
+                "daily_views": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
 
-            topic = label.lower().replace("_", " ").strip()
-            
-            if topic in seen_titles:
-                continue
-
-            # Gather and validate views data
-            views = item.get("views", -1)
-            if not isinstance(views, int):
-                views = -1
-
-            response = requests.get(WIKI_API_URL + topic, timeout=10)
-
-            if response.status_code == 200:
-                wiki_data = response.json()
-                content = wiki_data.get("extract", "No content available.")
-                url = wiki_data.get("content_urls", {}).get("desktop", {}).get("page", "")
-            else:
-                content = "No content available."
-                url = ""
-
-            if content == "No content available.":
-                # 保留这个警告但简化
-                print(f"No Wikipedia content found for: {topic}")
-                continue  # 跳过没有内容的项
-
-            valid_data.append({
-                "title": topic,
-                "label": label,  # 确保 label 存在
-                "views": views,
-                "wikipedia_content": content,
-                "source_url": url
-            })
-            seen_titles.add(topic)
-            # 移除每个处理成功的打印
-
-        except (ValueError, requests.exceptions.RequestException) as e:
-            print(f"Skipping invalid data - {str(e)}")
-
-    return valid_data
+    if not es.indices.exists(index=index_name):
+        es.indices.create(index=index_name, body=mapping)
+        print(f"Index '{index_name}' created with custom mapping.")
+    else:
+        print(f"Index '{index_name}' already exists.")
 
 # Connect to Elasticsearch and import data
-def import_data():
+def import_data(data_file):
     es = Elasticsearch(ES_HOST)
-
-    # Check if index exists
-    if es.indices.exists(index=INDEX_NAME):
-        print(f"Index '{INDEX_NAME}' already exists")
-    else:
-        es.indices.create(index=INDEX_NAME)
-        print(f"Index '{INDEX_NAME}' created successfully")
+    create_index_with_mapping(es, INDEX_NAME)
 
     # Read JSON data
     try:
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
+        with open(data_file, "r", encoding="utf-8") as f:
             data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Error loading JSON data: {e}")
         return
-
-    # Preprocess data
-    data = preprocess_data(data)
-
+    
     if not data:
         print("No valid data to import")
         return
 
     # Bulk import data
-    actions = [
+    articles = [
         {
-            "_op_type": "update",
-            "_index": INDEX_NAME, 
-            "_id": item["title"],
-            "doc": item,
-            "doc_as_upsert": True
+            "_index": INDEX_NAME,
+            "_id": item.get("title"),  # Use the "title" as the document ID to prevent duplicates
+            "_source": item
         }
         for item in data
+        if "title" in item  # Ensure "title" exists in the document
     ]
 
     try:
-        helpers.bulk(es, actions)
-        print(f"Successfully imported {len(data)} records into '{INDEX_NAME}' index")
+        helpers.bulk(es, articles)
+        print(f"Successfully imported {len(articles)} records into '{INDEX_NAME}' index")
     except helpers.BulkIndexError as e:
         print(f"Some data is invalid, total {len(e.errors)} errors")
-        # 移除错误详情的打印
 
 if __name__ == "__main__":
     print("Starting data import...")
     wait_for_es()  # Ensure Elasticsearch is running
-    import_data()  # Import JSON data
+    for filename in os.listdir(DATA_FOLDER):
+        if filename.endswith(".json"):
+            file_path = os.path.join(DATA_FOLDER, filename)
+            print(f"Importing data from {file_path}...")
+            import_data(file_path)
+    print("Data import completed.")
