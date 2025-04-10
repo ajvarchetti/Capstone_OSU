@@ -2,6 +2,10 @@ FROM python:3.9-slim AS base
 
 WORKDIR /db
 
+# Copy Scripts
+COPY *.py .
+COPY categories.json .
+
 # Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
