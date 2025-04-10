@@ -22,7 +22,7 @@ services:
     env_file:
       - ./db/config/.prod.env
 
-  update-data:
+  import-data:
     image: ghcr.io/ajvarchetti/capstone_osu_data:main
     depends_on:
       - elasticsearch
@@ -31,9 +31,7 @@ services:
     volumes:
       - ./db/data:/db/data
     command: >
-      sh -c "python3 download_all_categories.py &&
-            python3 download_wiki_articles.py &&
-            python3 elasticsearch_import.py"
+      sh -c "python3 elasticsearch_import.py"
 
   elasticsearch-wrapper-api:
     image: ghcr.io/ajvarchetti/capstone_osu_api:main
