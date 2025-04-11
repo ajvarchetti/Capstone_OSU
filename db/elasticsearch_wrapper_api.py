@@ -4,6 +4,7 @@ from elasticsearch import Elasticsearch
 import google.generativeai as genai
 import os
 import time
+from datetime import datetime
 from es_gen_models import genV1, genV2, genV3
 
 # Configure Elasticsearch
@@ -75,14 +76,26 @@ def getSamples():
         return None
 
     try:
+        seed = int(datetime.now().strftime("%H%M%S"))  # Use current time as seed
+    except ValueError as e:
+        print(f"⚠️ Error generating seed from datetime: {e}")
+        seed = 0  # Fallback to a default seed value
+
+    try:
         response = es.search(
             index="wikipedia_conspiracies",
             body={
                 "size": numTopics,
                 "_source": ["title"],
-                "query": {"match_all": {}}
+                "query": {
+                    "function_score": {
+                        "query": {"match_all": {}},
+                        "random_score": {"seed": seed, "field": "_seq_no"}
+                    }
+                }
             }
         )
+        
         samples = [hit["_source"]["title"] for hit in response["hits"]["hits"]]
     except Exception as e:
         return jsonify({"error": f"Failed to fetch samples: {str(e)}"}), 500

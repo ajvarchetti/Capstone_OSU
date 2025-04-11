@@ -80,45 +80,57 @@ function App() {
     setHasGenerated(false); // Hide sidebar
   };
 
-  useEffect(() => {
-    const fetchSamples = async () => {
-      const apiUrl =
-        process.env.NODE_ENV === "production"
-          ? "https://conspiragen.com/samples"
-          : "http://localhost:5002/samples";
-      try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-  
-        if (!response.ok || !Array.isArray(data)) {
-          throw new Error("Failed to fetch samples or unexpected response format");
-        }
-  
-        setSampleTopics(data); 
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          alert(error.message);
-        } else {
-          alert("An unknown error occurred.");
-        }
-        console.error("Fetch error:", error);
-      }
-    };
-  
-    fetchSamples();
-  }, []);
 
-  const fillRandomTopics = () => {
-    const randomIndex1 = Math.floor(Math.random() * sampleTopics.length);
-    let randomIndex2;
+  const fetchSamples = async (): Promise<string[] | null> => {
+    const apiUrl =
+      process.env.NODE_ENV === "production"
+        ? "https://conspiragen.com/samples"
+        : "http://localhost:5002/samples";
+    try {
+      const response = await fetch(apiUrl);
+      const data = await response.json();
   
-    do {
-      randomIndex2 = Math.floor(Math.random() * sampleTopics.length);
-    } while (randomIndex2 === randomIndex1);
+      if (!response.ok || !Array.isArray(data)) {
+        throw new Error("Failed to fetch samples or unexpected response format");
+      }
   
-    setInput1(sampleTopics[randomIndex1]);
-    setInput2(sampleTopics[randomIndex2]);
-  }
+      setSampleTopics(data); 
+      return data;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("An unknown error occurred.");
+      }
+      console.error("Fetch error:", error);
+      return null;
+    }
+  };
+
+  const fillRandomTopics = async () => {
+    let topics = [...sampleTopics];
+  
+    if (topics.length < 2) {
+      const fetched = await fetchSamples();
+      if (!fetched || fetched.length < 2) {
+        alert("Not enough sample topics available.");
+        return;
+      }
+      topics = [...fetched];
+    }
+  
+    const randomIndex1 = Math.floor(Math.random() * topics.length);
+    const topic1 = topics.splice(randomIndex1, 1)[0];
+  
+    const randomIndex2 = Math.floor(Math.random() * topics.length);
+    const topic2 = topics.splice(randomIndex2, 1)[0];
+  
+    setInput1(topic1);
+    setInput2(topic2);
+  
+    setSampleTopics(topics);
+  };
+  
   
 
   return (
