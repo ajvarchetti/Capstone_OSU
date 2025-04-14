@@ -11,6 +11,20 @@ CD into `webapp` and do `npm run test` to run tests.
 
 If you have difficulty with packages (specifically if you get an error stating you're missing `rollup-linux-x64-gnu` or similar), run `npm run docker:npm-install`.
 
+### Uploading data to the server
+
+First run the app locally, or at least the update-data container. This will populate data/articles.
+
+Then run the following commands from the project root:
+
+- rsync -avzP ./db/data/articles root@conspiragen.com:~/db/data
+- ssh root@conspiragen.com 'docker compose -f ~/compose.prod.yml up --build -d --force-recreate --remove-orphans import-data'
+
+These commands don't exist on windows, so use WSL if necessary.
+They require a valid SSH key to connect to the server.
+
+Unfortunately the server cannot download the data directly without being rate limited.
+
 ## Sprint 1 Goals
 
 - Query the Gemini API programatically
@@ -27,10 +41,12 @@ If you have difficulty with packages (specifically if you get an error stating y
 - Start querying Gemini or Deepseek with prompts from elsaticsearch information
 
 ## Additional information
+
 ### Hex Codes
+
 - Very Dark Blue: #011f4b
 - Dark Blue: #03396c
 - Blue: #005b96
 - Light Blue: #6497b1
 - Lightest Blue: #b3cde0
-[Source Website (Last Accessed 3/16/2025)](https://www.color-hex.com/color-palette/1294)
+  [Source Website (Last Accessed 3/16/2025)](https://www.color-hex.com/color-palette/1294)
