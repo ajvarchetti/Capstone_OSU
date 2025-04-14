@@ -14,7 +14,7 @@ html, body {
 }
 
 .sidebar {
-  width: 200px; 
+  width: 210px; 
   background-color: #b3cde0;
   padding: 1rem;
   display: flex;
@@ -33,9 +33,9 @@ html, body {
 
 .response-list {
   overflow-y: auto;
-  max-height: 24rem;
   padding: 0;
   margin: 0;
+  max-height: 84vh;
 }
 
 .response-item {
@@ -44,6 +44,7 @@ html, body {
   background-color: #ffffff;
   border-radius: 0.25rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  width: 90%;
 }
 
 .response-item.active {
@@ -55,12 +56,21 @@ html, body {
 .button {
   padding: .5rem;
   border-radius: 0.25rem;
-  color: #ffffff;
+  color: white;
   text-align: center;
+  background-color: #005b96;
 }
 
 .new-theory-button {
-  background-color: #005b96;
+  width: 100%;
+}
+
+.disabled-button {
+  background-color: #9ca3af;
+  color: #4b5563;
+  cursor: not-allowed;
+  border: 2px solid #6b7280;
+  opacity: 0.6;
 }
 
 .main-content {
@@ -69,14 +79,13 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: top; /* Centering content */
 }
 
 .header-text {
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
-  text-align: center; /* Centering text */
+  text-align: center;
 }
 
 .input-field {
@@ -88,6 +97,11 @@ html, body {
 }
 
 .generate-button {
+  background-color: #005b96;
+  color: white; 
+}
+
+.random-button {
   background-color: #005b96;
   color: white; 
 }
@@ -105,8 +119,9 @@ html, body {
   border-radius: 0.25rem;
   background-color: #f3f4f6;
   margin: 0 auto;
-  width: 75%;
+  width: 50vw;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  word-wrap: break-word;
 }
 
 .title {
@@ -130,7 +145,6 @@ html, body {
 .intro-text {
   display: block;
   width: 100%;
-  align-items: top;
   justify-content: center;
   padding: 4%;
 }
@@ -145,4 +159,19 @@ html, body {
   height: 2px;
   border: none;
   background-color: #011f4b
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #005b96;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
