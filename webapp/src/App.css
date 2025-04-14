@@ -1,3 +1,12 @@
+:root {
+  color-scheme: light !important;
+}
+
+html, body {
+  background-color: white !important;
+  color: black !important;
+}
+
 .container {
   display: flex;
   height: 100vh;
@@ -5,17 +14,18 @@
 }
 
 .sidebar {
-  width: 200px; /* Fixed size */
-  background-color: #e5e7eb;
+  width: 200px; 
+  background-color: #b3cde0;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  flex-shrink: 0; /* Prevent resizing */
+  flex-shrink: 0;
+  border-right: 2px solid #6497b1
 }
 
 .stored-responses {
-  color: #00000f;
+  color: #011f4b;
   font-size: 1.125rem;
   font-weight: bold;
   margin-bottom: 0.5rem;
@@ -37,8 +47,9 @@
 }
 
 .response-item.active {
-  background-color: #d1fae5;
-  border: 2px solid #10b981;
+  background-color: #6497b1;
+  border: 2px solid #005b96;
+  color: white
 }
 
 .button {
@@ -49,12 +60,12 @@
 }
 
 .new-theory-button {
-  background-color: #6497b1;
+  background-color: #005b96;
 }
 
 .main-content {
   flex: 1;
-  padding: 2rem;
+  padding: 7%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -78,7 +89,7 @@
 
 .generate-button {
   background-color: #005b96;
-  color: black; 
+  color: white; 
 }
 
 .random-button {
@@ -104,9 +115,8 @@
 }
 
 .title {
-  margin: 0 0 10vh 0;
-  padding: 10px 0;
-  text-align: center; /* Ensure the title is centered */
+  margin: 0 0 1vh 0;
+  text-align: center;
 }
 
 .main-logo {
@@ -119,27 +129,25 @@
   justify-content: center;
   align-items: center;
   width: 100%;
-  margin: 10% 0 0 0
+  margin: 5% 0 0 0
 }
 
-@media (prefers-color-scheme: dark) {
-  .sidebar {
-    background-color: #8c8c8c;
-  }
-  .new-theory-button {
-    background-color: #b3cde0;
-    color: black;
-  }
-  .response-box {
-    background-color: #b3cde0;
-    color: black;
-  }
-  .response-item {
-    color: black;
-    background-color: #b3cde0;
-  }
-  .response-item.active {
-    background-color: #6497b1;
-    border: 2px solid #005b96;
-  }
+.intro-text {
+  display: block;
+  width: 100%;
+  align-items: top;
+  justify-content: center;
+  padding: 4%;
+}
+
+.inputs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.stored-responses-line{
+  height: 2px;
+  border: none;
+  background-color: #011f4b
 }
