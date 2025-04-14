@@ -64,7 +64,7 @@ function App()  {
   };
 
   const sanitizeInput = (input: string): string => {
-    let sanitized = DOMPurify.sanitize(input.trim()); 
+    let sanitized = DOMPurify.sanitize(input); 
     return sanitized.replace(/[^a-zA-Z0-9\s]/g, "").slice(0, 50);
 };
 
