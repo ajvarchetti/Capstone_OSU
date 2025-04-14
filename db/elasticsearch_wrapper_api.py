@@ -144,8 +144,8 @@ def getSamples():
         print("❌ Elasticsearch is not connected.")
         return None
 
-    if not es.indices.exists(index="wikipedia_conspiracies"):
-        print(f"❌ Index 'wikipedia_conspiracies' does not exist")
+    if not es.indices.exists(index="wikipedia"):
+        print(f"❌ Index 'wikipedia' does not exist")
         return None
 
     try:
@@ -156,7 +156,7 @@ def getSamples():
 
     try:
         response = es.search(
-            index="wikipedia_conspiracies",
+            index="wikipedia",
             body={
                 "size": numTopics,
                 "_source": ["title"],
