@@ -4,6 +4,7 @@ from elasticsearch import Elasticsearch
 import google.generativeai as genai
 import os
 import time
+from datetime import datetime
 from es_gen_models import genV1, genV2, genV3
 
 # Configure Elasticsearch
@@ -130,11 +131,49 @@ def generate():
     if not query:
         return jsonify({"error": "Missing query"}), 400
     
-    obj = genV3(es, connected, GEMINI_API_KEY, query)
+    obj = genV2(es, connected, GEMINI_API_KEY, query)
     # obj = genV1(es, connected, GEMINI_API_KEY, query)
 
     return obj
 
+@app.route("/samples", methods=["GET"])
+def getSamples():
+    numTopics = 50  # Default number of topics to fetch
+
+    if not es or not connected:
+        print("❌ Elasticsearch is not connected.")
+        return None
+
+    if not es.indices.exists(index="wikipedia"):
+        print(f"❌ Index 'wikipedia' does not exist")
+        return None
+
+    try:
+        seed = int(datetime.now().strftime("%H%M%S"))  # Use current time as seed
+    except ValueError as e:
+        print(f"⚠️ Error generating seed from datetime: {e}")
+        seed = 0  # Fallback to a default seed value
+
+    try:
+        response = es.search(
+            index="wikipedia",
+            body={
+                "size": numTopics,
+                "_source": ["title"],
+                "query": {
+                    "function_score": {
+                        "query": {"match_all": {}},
+                        "random_score": {"seed": seed, "field": "_seq_no"}
+                    }
+                }
+            }
+        )
+        
+        samples = [hit["_source"]["title"] for hit in response["hits"]["hits"]]
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch samples: {str(e)}"}), 500
+
+    return jsonify(samples)
 
 @app.route("/debug/status", methods=["GET"])
 def debug_status():
