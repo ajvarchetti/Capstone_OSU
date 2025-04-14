@@ -210,8 +210,7 @@ def esV2_relaxed(es: Elasticsearch, connected: bool, topic1: str, topic2: str, f
 def consp_promptV1(keywords, wiki_data) -> str:
     prompt = f"""
     You are an expert in historical mysteries. Using only the information contained in the following Wikipedia 
-    summaries about {', '.join(keywords)}, create a fascinating story that connects them. Use a maximum of 8 
-    sentences total for the story. You may leave out information that is not relevant to the story, but do not 
+    summaries about {', '.join(keywords)}, create a fascinating story that connects them. You may leave out information that is not relevant to the story, but do not 
     hallucinate false information.
 
     Wikipedia Data:
