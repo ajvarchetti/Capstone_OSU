@@ -13,7 +13,7 @@ function App() {
   const [activeResponse, setActiveResponse] = useState<number | null>(null);
   const [showResponse, setShowResponse] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(responses.length > 0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const isButtonDisabled = !input1.trim() || !input2.trim() || input1 == input2;
   const [sampleTopics, setSampleTopics] = useState<string[]>([]);
   useEffect(() => {
@@ -26,13 +26,14 @@ function App() {
       return;
     }
 
+    setIsProcessing(true);
+    
     const query = `${input1},${input2}`;
     const apiUrl =
       process.env.NODE_ENV === "production"
         ? "https://conspiragen.com/generate"
         : "http://localhost:5002/generate";
 
-    setIsLoading(true); // Set loading to true
     try {
       const response = await fetch(`${apiUrl}?q=${encodeURIComponent(query)}`);
       const data = await response.json();
@@ -57,7 +58,7 @@ function App() {
       }
       console.error("Fetch error:", error);
     } finally {
-      setIsLoading(false); // Set loading to false
+      setIsProcessing(false); 
     }
   };
 
@@ -189,7 +190,12 @@ function App() {
                   placeholder="First Topic" 
                   className="input-field"
                   style={{ margin: '0 32px' }}
-                />
+                  onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isButtonDisabled) {
+                    generateTheory();
+                  }
+                }}
+              />
 
               <input 
                   type="text" 
@@ -198,11 +204,16 @@ function App() {
                   placeholder="Second Topic" 
                   className="input-field"
                   style={{ margin: '0 32px' }}
-                />
+                  onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isButtonDisabled) {
+                    generateTheory();
+                  }
+                }}
+              />
             </div>
 
             <div className="button-container">
-              {isLoading ? ( 
+              {isProcessing ? ( 
                 <div className="spinner"></div>
               ) : (
                 <button
@@ -215,7 +226,7 @@ function App() {
               )}
             </div>
             <div className="button-container">
-              {isLoading ? ( 
+              {isProcessing ? ( 
                 null
               ) : (
                 <button onClick={fillRandomTopics} className="button random-button">Fill Random Topics</button>

@@ -24,11 +24,11 @@ def call_es(es: Elasticsearch, connected: bool, topic: str, es_query: dict):
             print("❌ Elasticsearch is not connected.")
             return None
 
-        if not es.indices.exists(index="wikipedia_conspiracies"):
-            print(f"❌ Index 'wikipedia_conspiracies' does not exist")
+        if not es.indices.exists(index="wikipedia"):
+            print(f"❌ Index 'wikipedia' does not exist")
             return None
             
-        response = es.search(index="wikipedia_conspiracies", query=es_query["query"], size=es_query.get("size", 10))
+        response = es.search(index="wikipedia", query=es_query["query"], size=es_query.get("size", 10))
         # print(response)
         hits = response.get("hits", {}).get("hits", [])
         
