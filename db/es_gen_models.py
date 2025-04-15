@@ -1,6 +1,10 @@
 from elasticsearch import Elasticsearch
+from elasticsearch import helpers
 from flask import jsonify
 import google.generativeai as genai
+import requests
+from requests.utils import quote
+
 
 # Cleans duplicate hits from Elasticsearch results based on the title field
 def clean_duplicate_hits(hits):
@@ -16,6 +20,54 @@ def clean_duplicate_hits(hits):
     print(f"Cleaned {len(hits) - len(unique_hits)} duplicate hits")
     return unique_hits
 
+# Fetch from Wikipedia API Method
+def fetch_from_wiki_api(es: Elasticsearch, connected: bool, topic: str) -> list:
+    if not es or not connected:
+        print("❌ Failed Wiki Fetch, Elasticsearch is not connected.")
+        return None
+
+    print(f"🔍 Fetching from Wikipedia API for topic: {topic}")
+    
+    try:
+        WIKI_API_URL = "https://en.wikipedia.org/api/rest_v1/page/summary/"
+        # Use URL encoding for the topic
+        url = WIKI_API_URL + quote(topic)
+        response = requests.get(url, timeout=10)
+
+        if response.status_code == 200:
+            wiki_data = response.json()
+            content = wiki_data.get("extract", "No content available.")
+            t = wiki_data.get("type", "ambiguous")
+
+            if t != "standard" or content == "No content available." or content == "":
+                print(f"⚠️ Wikipedia returned 'No content available' for: {topic}")
+                return None
+            page_url = wiki_data.get("content_urls", {}).get("desktop", {}).get("page", "")
+            doc = {
+                "title": topic.lower(),
+                "label": topic,
+                "views": -1,
+                "wikipedia_content": content,
+                "source_url": page_url
+            }
+            action = {
+                "_op_type": "update",
+                "_index": "wikipedia_conspiracies",
+                "_id": doc["title"],
+                "doc": doc,
+                "doc_as_upsert": True
+            }
+            helpers.bulk(es, [action])
+            print(f"✅ Wiki API Found Data for: {topic}")
+            print(doc['wikipedia_content'])
+            return doc
+        else:
+            print(f"⚠️ Wikipedia API returned status code {response.status_code} for topic: {topic}")
+            return None
+    except Exception as e:
+        print(f"❌ Error fetching from Wikipedia API: {e}")
+        return None
+
 # Function to call Elasticsearch and return results for a given query
 def call_es(es: Elasticsearch, connected: bool, topic: str, es_query: dict):
     try:
@@ -28,11 +80,16 @@ def call_es(es: Elasticsearch, connected: bool, topic: str, es_query: dict):
             return None
             
         response = es.search(index="wikipedia", query=es_query["query"], size=es_query.get("size", 10))
-        # print(response)
         hits = response.get("hits", {}).get("hits", [])
 
+        # Call Wikipedia API if no hits are found
         if not hits:
-            print(f"⚠️ No Wikipedia data found for query: {topic}")
+            print(f"⚠️ No Wikipedia data found for elastic search query: {topic}")
+            # hit = fetch_from_wiki_api(es, connected, topic)
+
+            # if hit is None:
+            #     return None
+            # return [hit]
             return None
 
         print(f"✅ Found {len(hits)} results for {topic}")
@@ -43,6 +100,7 @@ def call_es(es: Elasticsearch, connected: bool, topic: str, es_query: dict):
     except Exception as e:
         print(f"❌ Elasticsearch error: {e}")
         return None
+
 
 ## Elasticsearch Models
 
@@ -92,52 +150,10 @@ def esField(es: Elasticsearch, connected: bool, topic: str, field: str, fuzz=1) 
     hits = call_es(es, connected, topic, es_query)
 
     # If no hits are found, try to fetch data from the Wikipedia API
-    if hits is None and connected and es:
-        try:
-            import requests
-            from elasticsearch import helpers
-            from requests.utils import quote
-
-            WIKI_API_URL = "https://en.wikipedia.org/api/rest_v1/page/summary/"
-            # Use URL encoding for the topic
-            url = WIKI_API_URL + quote(topic)
-            print(f"🔍 Wikipedia API URL: {url}")
-            response = requests.get(url, timeout=10)
-
-            if response.status_code == 200:
-                wiki_data = response.json()
-                content = wiki_data.get("extract", "No content available.")
-                if content == "No content available.":
-                    print(f"⚠️ Wikipedia returned 'No content available' for: {topic}")
-                    return None
-                page_url = wiki_data.get("content_urls", {}).get("desktop", {}).get("page", "")
-                doc = {
-                    "title": topic.lower(),
-                    "label": topic,
-                    "views": -1,
-                    "wikipedia_content": content,
-                    "source_url": page_url
-                }
-                action = {
-                    "_op_type": "update",
-                    "_index": "wikipedia_conspiracies",
-                    "_id": doc["title"],
-                    "doc": doc,
-                    "doc_as_upsert": True
-                }
-                helpers.bulk(es, [action])
-                print(f"✅ Added new Wikipedia content for: {topic}")
-                return [doc]
-            else:
-                print(f"⚠️ Wikipedia API returned status code {response.status_code} for topic: {topic}")
-                return None
-        except Exception as e:
-            print(f"❌ Error fetching from Wikipedia API: {e}")
-            return None
-
     if hits is not None:
         hits = clean_duplicate_hits(hits)
         return hits
+
     return None
 
 # Takes a connection to ES with every function call.
@@ -163,47 +179,40 @@ def esV1(es: Elasticsearch, connected: bool, topic: str, fuzz: int = 2) -> str:
 
 # Uses a relaxed matching logic to search for Wikipedia data in ES,
 # aiming to return documents that contain either topic1, topic2, or both.
-def esV2_relaxed(es: Elasticsearch, connected: bool, topic1: str, topic2: str, fuzz: int = 2) -> str:
-    print(f"Searching for (relaxed) topics: {topic1} and {topic2}")
+def esV2(es: Elasticsearch, connected: bool, topic1: str, topic2: str, fuzz: int = 1) -> str:
+    """
+    Search Wikipedia data in Elasticsearch
+    """
+    print(f"🔍 Searching for topic between: {topic1} and {topic2}")
     es_query = {
         "query": {
             "bool": {
-                "should": [
-                    {
-                        "multi_match": {
-                            "query": f"{topic1} {topic2}",
-                            "fields": ["title", "wikipedia_content"],
-                            "fuzziness": "AUTO",
-                            "operator": "or"
-                        }
+                "must": [{
+                    "bool": {
+                        "should": [
+                            create_span_near_query(topic1, "title", fuzz),
+                            create_span_near_query(topic1, "wikipedia_content", fuzz)
+                        ]
                     },
-                    {
-                        "multi_match": {
-                            "query": topic1,
-                            "fields": ["title", "wikipedia_content"],
-                            "fuzziness": "AUTO",
-                            "operator": "or"
-                        }
-                    },
-                    {
-                        "multi_match": {
-                            "query": topic2,
-                            "fields": ["title", "wikipedia_content"],
-                            "fuzziness": "AUTO",
-                            "operator": "or"
-                        }
+                    "bool": {
+                        "should": [
+                            create_span_near_query(topic2, "title", fuzz),
+                            create_span_near_query(topic2, "wikipedia_content", fuzz)
+                        ]
                     }
-                ],
-                "minimum_should_match": 1
+                }]
             }
         },
-        "size": 50,
-        "min_score": 0.5
+        "size": 50
     }
-    hits = call_es(es, connected, f"{topic1} and {topic2}", es_query)
+    
+    # is none if ES is not connected or index does not exist
+    hits = call_es(es, connected, topic1 + " and " + topic2, es_query)
+
     if hits is not None:
         hits = clean_duplicate_hits(hits)
         hits = hits[:10] if len(hits) > 10 else hits
+
         return hits
     return None
 
@@ -321,8 +330,9 @@ def genV2(es, connected, GEMINI_API_KEY, query):
     wiki_data = []
 
     # Check for cross-reference hits first using the relaxed query logic
-    print(f"🔁 Checking cross-reference (relaxed) between: {keywords[0]} and {keywords[1]}")
-    cross_ref_hits = esV2_relaxed(es, connected, keywords[0], keywords[1])
+    print(" ----- Step (1 / 2) -----")
+    print(f"🔁 Cross Reference: {keywords[0]} and {keywords[1]}")
+    cross_ref_hits = esV2(es, connected, keywords[0], keywords[1])
     if cross_ref_hits:
         print(f"✅ Cross-ref hits found: {[h['title'] for h in cross_ref_hits]}")
         wiki_data.extend(cross_ref_hits)
@@ -330,8 +340,10 @@ def genV2(es, connected, GEMINI_API_KEY, query):
         print(f"⚠️ No cross-ref hits found for: {keywords[0]} and {keywords[1]}")
 
     # Add individual hits for each keyword, triggering Wikipedia fallback if not in ES
+    print(" ----- Step (2 / 2) -----")
+    print("🔁 Individual Keyword Search")
     for keyword in keywords:
-        print(f"🔍 Querying keyword with fallback: {keyword}")
+        print(f"🔍 Querying: {keyword}")
         hit = esField(es, connected, keyword, "title")
         if hit:
             print(f"✅ Data found for {keyword}: {[h['title'] for h in hit]}")
@@ -339,12 +351,16 @@ def genV2(es, connected, GEMINI_API_KEY, query):
         else:
             print(f"❌ No data found for keyword: {keyword}")
 
+    print("----- Finished ------")
+
     if not wiki_data:
         return jsonify({"error": "No Wikipedia data found for the provided keywords"}), 404
 
+    # Remove duplicates based on title
     wiki_data = clean_duplicate_hits(wiki_data)
     report_es_results(keywords, wiki_data)
     conspiracy_text = gem_consp(GEMINI_API_KEY, keywords, wiki_data)
+
     return gen_json_output(keywords, conspiracy_text, wiki_data)
 
 def genV3(es, connected, GEMINI_API_KEY, query, depth=2):
@@ -370,7 +386,7 @@ def genV3(es, connected, GEMINI_API_KEY, query, depth=2):
         if depth <= 0:
             return ([], 0)
 
-        hits = esV2_relaxed(es, connected, topic1, topic2)
+        hits = esV2(es, connected, topic1, topic2)
         if not hits:
             return ([], 0)
 
