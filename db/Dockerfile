@@ -31,15 +31,3 @@ RUN wget -q -O chromedriver-linux64.zip https://bit.ly/chromedriver-linux64-121-
 RUN unzip -j chromedriver-linux64.zip chromedriver-linux64/chromedriver
 RUN rm chromedriver-linux64.zip
 RUN mv chromedriver /usr/local/bin/
-
-# Test stage
-FROM with-chrome as test
-
-# Set working directory
-WORKDIR /app
-
-# Copy application files
-COPY . .
-
-# Command to run tests
-CMD ["python", "-m", "pytest"]
