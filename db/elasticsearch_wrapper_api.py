@@ -88,41 +88,6 @@ def search_wikipedia(query):
         print(f"❌ Elasticsearch error: {e}")
         return None
 
-def generate_conspiracy(keywords, wiki_data):
-    """
-    Use Gemini AI to generate a conspiracy theory
-    """
-    if not GEMINI_API_KEY:
-        return "Error: Gemini API key is not set."
-
-    try:
-        model = genai.GenerativeModel("gemini-1.5-pro")
-    except Exception as e:
-        return f"❌ Error initializing Gemini model: {e}"
-
-    prompt = f"""
-    You are a writer of absurd fictional conspiracy theories. They should be plausible (but do not need to be truthful), creative, entertaining and most of all, funny.
-    The conspiracy theory should be relatively simple and easy to understand, and between 5-8 sentences long.
-    You are given two topics and their respective wikipedia articles. Try to use information from the wikipedia articles to link the topics together in a humerous way.
-    The topics are: {', '.join(keywords)}.
-
-    Wikipedia data for each term will be delimited as - **term**: <content>
-
-    If a piece of information is not relevant to the conspiracy theory, do not include it in the response.
-    If a given topic is fictional, you may include the factual information about it's creation and factual history, but do not include any information about the fictional world it is set in.
-    If the topics supplied are NSFW, vulgar, or otherwise inappropriate, please do not generate a conspiracy theory. Instead, return a message saying "Sorry, I can't help with that."
-    Do not admit that the conspiracy theory is fictional, and do not include any disclaimers or other text in the response.
-    """
-    
-    for data in wiki_data:
-        prompt += f"\n- **{data['title']}**: <{data.get('wikipedia_content', 'Content not available')}>\n"
-
-    try:
-        response = model.generate_content(prompt)
-        return response.text if hasattr(response, 'text') else "Error: Invalid response format."
-    except Exception as e:
-        return f"❌ Gemini API error: {e}"
-
 # API Endpoints
 @app.route("/generate", methods=["GET"])
 def generate():
