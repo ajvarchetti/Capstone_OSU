@@ -275,7 +275,7 @@ def gem_consp(GEMINI_API_KEY, keywords, wiki_data):
         return "Error: Gemini API key is not set."
 
     try:
-        model = genai.GenerativeModel("gemini-1.5-pro")
+        model = genai.GenerativeModel("gemini-2.0-flash")
     except Exception as e:
         return f"❌ Error initializing Gemini model: {e}"
 
