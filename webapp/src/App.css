@@ -15,13 +15,15 @@ html, body {
 
 .sidebar {
   width: 210px; 
+  height: 100vh;
   background-color: #b3cde0;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   flex-shrink: 0;
-  border-right: 2px solid #6497b1
+  border-right: 2px solid #6497b1;
+  position: fixed; 
 }
 
 .stored-responses {
@@ -63,6 +65,7 @@ html, body {
 
 .new-theory-button {
   width: 100%;
+  margin-bottom: 1.5rem;
 }
 
 .disabled-button {
@@ -107,11 +110,11 @@ html, body {
 }
 
 .disabled-button {
-    background-color: #9ca3af;
-    color: #4b5563;
-    cursor: not-allowed;
-    border: 2px solid #6b7280;
-    opacity: 0.6; 
+  background-color: #9ca3af;
+  color: #4b5563;
+  cursor: not-allowed;
+  border: 2px solid #6b7280;
+  opacity: 0.6; 
 }
 .response-box {
   border: 1px solid #d1d5db;
