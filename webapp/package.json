@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "start": "docker compose -f ../compose.dev.yml up -d",
+    "start": "docker compose -f ../compose.dev.yml up -d webapp-dev elasticsearch-wrapper-api",
+    "update-data": "docker compose -f ../compose.dev.yml up -d update-data",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "docker compose -f ../compose.test.yml up -d",
