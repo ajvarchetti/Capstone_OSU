@@ -6,6 +6,7 @@ import os
 import time
 from datetime import datetime
 from es_gen_models import genV1, genV2, genV3
+import subprocess
 
 # Configure Elasticsearch
 ES_HOST = os.getenv("ES_HOST", "http://elasticsearch:9200")
@@ -50,6 +51,27 @@ else:
 app = Flask(__name__)
 CORS(app)
 
+def check_index_exists(es, index_name="wikipedia"):
+    """
+    Check if an Elasticsearch index exists
+    """
+    try:
+        return es.indices.exists(index=index_name)
+    except Exception as e:
+        print(f"❌ Error checking index: {e}")
+        return False
+
+def reimport_data():
+    """
+    Trigger the re-import of data into Elasticsearch
+    """
+    try:
+        print("🔄 Re-importing Wikipedia data...")
+        subprocess.run(["docker", "compose", "-f", "compose.prod.yml", "run", "--rm", "import-data"], check=True)
+        print("✅ Wikipedia data re-imported successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Import failed: {e}")
+
 def search_wikipedia(query):
     """
     Search Wikipedia data in Elasticsearch
@@ -69,24 +91,24 @@ def search_wikipedia(query):
     try:
         if not es or not connected:
             print("❌ Elasticsearch is not connected.")
-            return None
+            return jsonify({"error": "Elasticsearch is not connected"}), 500
 
-        if not es.indices.exists(index="wikipedia"):
+        if not check_index_exists(es, "wikipedia"):
             print(f"❌ Index 'wikipedia' does not exist")
-            return None
+            return jsonify({"error": "Index 'wikipedia' does not exist"}), 404
             
         response = es.search(index="wikipedia", query=es_query["query"])
         hits = response.get("hits", {}).get("hits", [])
         
         if not hits:
             print(f"⚠️ No Wikipedia data found for query: {query}")
-            return None
+            return jsonify({"error": f"No Wikipedia data found for query: {query}"}), 404
         
         print(f"✅ Found {len(hits)} results for {query}")
         return hits[0]["_source"]
     except Exception as e:
         print(f"❌ Elasticsearch error: {e}")
-        return None
+        return jsonify({"error": f"Elasticsearch error: {str(e)}"}), 500
 
 def generate_conspiracy(keywords, wiki_data):
     """
@@ -130,7 +152,14 @@ def generate():
 
     if not query:
         return jsonify({"error": "Missing query"}), 400
-    
+
+    # Check if the 'wikipedia' index exists. If not, re-import the data.
+    if not check_index_exists(es, "wikipedia"):
+        reimport_data()
+        # Verify if the index was successfully created after re-importing
+        if not check_index_exists(es, "wikipedia"):
+            return jsonify({"error": "Failed to create 'wikipedia' index after re-importing data"}), 500
+
     obj = genV2(es, connected, GEMINI_API_KEY, query)
     # obj = genV1(es, connected, GEMINI_API_KEY, query)
 
@@ -144,9 +173,12 @@ def getSamples():
         print("❌ Elasticsearch is not connected.")
         return jsonify({"error": "Elasticsearch is not connected"}), 500
 
-    if not es.indices.exists(index="wikipedia"):
-        print(f"❌ Index 'wikipedia' does not exist")
-        return jsonify({"error": "Index 'wikipedia' does not exist"}), 500
+    # Check if the 'wikipedia' index exists. If not, re-import the data.
+    if not check_index_exists(es, "wikipedia"):
+        reimport_data()
+        # Verify if the index was successfully created after re-importing
+        if not check_index_exists(es, "wikipedia"):
+            return jsonify({"error": "Failed to create 'wikipedia' index after re-importing data"}), 500
 
     try:
         seed = int(datetime.now().strftime("%H%M%S"))  # Use current time as seed
