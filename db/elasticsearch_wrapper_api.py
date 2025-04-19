@@ -50,44 +50,6 @@ else:
 app = Flask(__name__)
 CORS(app)
 
-def search_wikipedia(query):
-    """
-    Search Wikipedia data in Elasticsearch
-    """
-    print(f"🔍 Searching for: {query}")
-    es_query = {
-        "query": {
-            "bool": {
-                "should": [
-                    {"match": {"title": query}},
-                    {"match": {"wikipedia_content": query}}
-                ]
-            }
-        }
-    }
-    
-    try:
-        if not es or not connected:
-            print("❌ Elasticsearch is not connected.")
-            return None
-
-        if not es.indices.exists(index="wikipedia"):
-            print(f"❌ Index 'wikipedia' does not exist")
-            return None
-            
-        response = es.search(index="wikipedia", query=es_query["query"])
-        hits = response.get("hits", {}).get("hits", [])
-        
-        if not hits:
-            print(f"⚠️ No Wikipedia data found for query: {query}")
-            return None
-        
-        print(f"✅ Found {len(hits)} results for {query}")
-        return hits[0]["_source"]
-    except Exception as e:
-        print(f"❌ Elasticsearch error: {e}")
-        return None
-
 # API Endpoints
 @app.route("/generate", methods=["GET"])
 def generate():
