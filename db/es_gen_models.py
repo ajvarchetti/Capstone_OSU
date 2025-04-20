@@ -277,7 +277,9 @@ def gem_consp(GEMINI_API_KEY, keywords, wiki_data):
     try:
         model = genai.GenerativeModel("gemini-1.5-flash")
     except Exception as e:
-        return f"❌ Error initializing Gemini model: {e}"
+        print(f"❌ Error initializing Gemini model: {e}")
+        # Return a user-friendly error message
+        return "Error: Failed to initialize Gemini model. Please try again later (60 seconds)."
 
 
     prompt = consp_promptV2(keywords, wiki_data)
