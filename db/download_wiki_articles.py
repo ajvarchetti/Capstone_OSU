@@ -15,7 +15,7 @@ WIKI_FULLTEXT_API = "https://en.wikipedia.org/w/api.php"
 def fetch_wikipedia_content(title):
     """Fetch full Wikipedia page content and its URL"""
     title = title.replace(" ", "_")  # Convert spaces to underscores
-    print(f"🔍 Fetching Wikipedia data for: {title}")
+    #print(f"🔍 Fetching Wikipedia data for: {title}")
 
     # Get the page URL
     summary_url = WIKI_SUMMARY_API + title
@@ -59,7 +59,7 @@ def process_article(item, retries=5):
     daily_views = item.get("daily_views")
     
     if not title or not isinstance(title, str):
-        print(f"⚠️ Skipping invalid article: {item}")
+        #print(f"⚠️ Skipping invalid article: {item}")
         return None  # Skip invalid data
 
     title = title.replace("_", " ")  # Convert to Wikipedia page format
@@ -68,7 +68,7 @@ def process_article(item, retries=5):
         wikipedia_content, source_url = fetch_wikipedia_content(title)
 
         if wikipedia_content != "No content available.":
-            print(f"✅ Processed: {title}")
+            # print(f"✅ Processed: {title}")
             return {
                 "title": title,
                 "wikipedia_content": wikipedia_content,
@@ -79,7 +79,7 @@ def process_article(item, retries=5):
             print(f"⚠️ Attempt {attempt} failed for: {title}")
             if attempt < retries:
                 time.sleep(6.0) # Wait before retrying (api seems to occasionally blackout for a few seconds)
-                print(f"🔄 Retrying for: {title}...")
+                # print(f"🔄 Retrying for: {title}...")
 
     print(f"❌ All {retries} attempts failed for: {title}")
     return None  # Skip entries after exhausting retries
