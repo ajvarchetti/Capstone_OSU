@@ -58,7 +58,7 @@ def generate():
     if not query:
         return jsonify({"error": "Missing query"}), 400
     
-    obj = genV2(es, connected, GEMINI_API_KEY, query)
+    obj = genV3(es, connected, GEMINI_API_KEY, query, article_limit=5)
     # obj = genV1(es, connected, GEMINI_API_KEY, query)
 
     return obj

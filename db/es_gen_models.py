@@ -45,14 +45,13 @@ def fetch_from_wiki_api(es: Elasticsearch, connected: bool, topic: str) -> list:
             page_url = wiki_data.get("content_urls", {}).get("desktop", {}).get("page", "")
             doc = {
                 "title": topic.lower(),
-                "label": topic,
-                "views": -1,
+                "daily_views": -1,
                 "wikipedia_content": content,
                 "source_url": page_url
             }
             action = {
                 "_op_type": "update",
-                "_index": "wikipedia_conspiracies",
+                "_index": "wikipedia",
                 "_id": doc["title"],
                 "doc": doc,
                 "doc_as_upsert": True
@@ -85,12 +84,11 @@ def call_es(es: Elasticsearch, connected: bool, topic: str, es_query: dict):
         # Call Wikipedia API if no hits are found
         if not hits:
             print(f"⚠️ No Wikipedia data found for elastic search query: {topic}")
-            # hit = fetch_from_wiki_api(es, connected, topic)
+            hit = fetch_from_wiki_api(es, connected, topic)
 
-            # if hit is None:
-            #     return None
-            # return [hit]
-            return None
+            if hit is None:
+                return None
+            return [hit]
 
         print(f"✅ Found {len(hits)} results for {topic}")
         for hit in hits:
@@ -121,7 +119,7 @@ def create_span_clause(word: str, field: str, fuzz: int) -> dict:
 
 # Creates the clause necessary for multi-word fuzzy search in ES.
 def create_span_near_query(topic: str, field: str, fuzz: int = 2) -> dict:
-    topic_list = topic.split(" ")
+    topic_list = topic.lower().split(" ")
     span_dict = {
         "span_near": {
             "clauses": [],
@@ -136,7 +134,9 @@ def create_span_near_query(topic: str, field: str, fuzz: int = 2) -> dict:
 
 # Searches for a topic in Elasticsearch. If no results are found, tries to fetch from the Wikipedia API.
 def esField(es: Elasticsearch, connected: bool, topic: str, field: str, fuzz=1) -> str:
-    print(f"🔍 Searching for: {topic}")
+    print(f"🔍 Searching for: {topic} in field: {field}")
+    
+    # First try direct term query to see if the exact term exists
     es_query = {
         "query": {
             "bool": {
@@ -147,9 +147,9 @@ def esField(es: Elasticsearch, connected: bool, topic: str, field: str, fuzz=1) 
         },
         "size": 50
     }
+    
     hits = call_es(es, connected, topic, es_query)
-
-    # If no hits are found, try to fetch data from the Wikipedia API
+    
     if hits is not None:
         hits = clean_duplicate_hits(hits)
         return hits
@@ -244,14 +244,14 @@ def consp_promptV2(keywords, wiki_data) -> str:
     agreed upon conspiracy is the only thing that will be returned to the user.
 
     Both of these keywords will be used below in the rules
-    KEYWORD1: {keywords[0]}
-    KEYWORD2: {keywords[-1]}
+    <KEYWORD1>: {keywords[0]}
+    <KEYWORD2>: {keywords[-1]}
 
     The rules for each expert conspiracy author are as follows:
     1. You may ONLY use information contained in the provided Wikipedia summaries.
     2. Your conspiracy must not agree with commonly accepted historical narratives.
-    3. The conspiracy must begin with either the topic KEYWORD1 or the topic KEYWORD2.
-    4. The conspiracy must use KEYWORD1 and KEYWORD2 as key elements in the story.
+    3. The conspiracy must begin with either the topic <KEYWORD1> or the topic <KEYWORD2>.
+    4. The conspiracy must use <KEYWORD1> and <KEYWORD2> as key elements in the story.
     5. Facts and timelines must be consistent with the provided Wikipedia summaries but may be miss-interpreted.
     6. The conspiracy must be non-falsifiable and open to interpretation.
     7. The conspiracy must cite statistics found in a wikipedia summary at least once
@@ -275,7 +275,7 @@ def gem_consp(GEMINI_API_KEY, keywords, wiki_data):
         return "Error: Gemini API key is not set."
 
     try:
-        model = genai.GenerativeModel("gemini-1.5-pro")
+        model = genai.GenerativeModel("gemini-1.5-flash")
     except Exception as e:
         return f"❌ Error initializing Gemini model: {e}"
 
@@ -305,7 +305,6 @@ def gen_json_output(keywords, conspiracy_text, wiki_data):
     })
 
 ## Base Generation Models for ES and Gemini API
-
 def genV1(es, connected, GEMINI_API_KEY, query):
     keywords = [k.strip() for k in query.split(",")]
     wiki_data = []
@@ -321,26 +320,18 @@ def genV1(es, connected, GEMINI_API_KEY, query):
     conspiracy_text = gem_consp(GEMINI_API_KEY, keywords, wiki_data)
     return gen_json_output(keywords, conspiracy_text, wiki_data)
 
-def genV2(es, connected, GEMINI_API_KEY, query):
+def genV2(es, connected, GEMINI_API_KEY, query, article_limit=10):
     keywords = [k.strip() for k in query.split(",")]
 
+    # Bail and call genV1 if less than 2 keywords
     if len(keywords) < 2:
-        return jsonify({"error": "Please provide at least two keywords for comparison"}), 400
+        print("❌ Less than 2 keywords provided, falling back to genV1")
+        return genV1(es, connected, GEMINI_API_KEY, query)
 
     wiki_data = []
 
-    # Check for cross-reference hits first using the relaxed query logic
-    print(" ----- Step (1 / 2) -----")
-    print(f"🔁 Cross Reference: {keywords[0]} and {keywords[1]}")
-    cross_ref_hits = esV2(es, connected, keywords[0], keywords[1])
-    if cross_ref_hits:
-        print(f"✅ Cross-ref hits found: {[h['title'] for h in cross_ref_hits]}")
-        wiki_data.extend(cross_ref_hits)
-    else:
-        print(f"⚠️ No cross-ref hits found for: {keywords[0]} and {keywords[1]}")
-
     # Add individual hits for each keyword, triggering Wikipedia fallback if not in ES
-    print(" ----- Step (2 / 2) -----")
+    print(" ----- Step (1 / 2) -----")
     print("🔁 Individual Keyword Search")
     for keyword in keywords:
         print(f"🔍 Querying: {keyword}")
@@ -351,19 +342,29 @@ def genV2(es, connected, GEMINI_API_KEY, query):
         else:
             print(f"❌ No data found for keyword: {keyword}")
 
+    # Check for cross-reference hits first using the relaxed query logic
+    print(" ----- Step (2 / 2) -----")
+    print(f"🔁 Cross Reference: {keywords[0]} and {keywords[1]}")
+    cross_ref_hits = esV2(es, connected, keywords[0], keywords[1])
+    if cross_ref_hits:
+        print(f"✅ Cross-ref hits found: {[h['title'] for h in cross_ref_hits]}")
+        wiki_data.extend(cross_ref_hits) # Limit to first 3 hits
+    else:
+        print(f"⚠️ No cross-ref hits found for: {keywords[0]} and {keywords[1]}")
+
     print("----- Finished ------")
 
     if not wiki_data:
         return jsonify({"error": "No Wikipedia data found for the provided keywords"}), 404
 
     # Remove duplicates based on title
-    wiki_data = clean_duplicate_hits(wiki_data)
+    wiki_data = clean_duplicate_hits(wiki_data)[:article_limit]
     report_es_results(keywords, wiki_data)
     conspiracy_text = gem_consp(GEMINI_API_KEY, keywords, wiki_data)
 
     return gen_json_output(keywords, conspiracy_text, wiki_data)
 
-def genV3(es, connected, GEMINI_API_KEY, query, depth=2):
+def genV3(es, connected, GEMINI_API_KEY, query, depth=2, article_limit=10):
     keywords = [k.strip() for k in query.split(",")]
 
     if len(keywords) < 2:
@@ -400,7 +401,7 @@ def genV3(es, connected, GEMINI_API_KEY, query, depth=2):
             sm_titles = [t['title'].lower() for t in sm]
 
             (me, me_views) = cross_ref(hit_title, topic2, depth - 1, black_list + sm_titles)
-            hit_views = hit.get('views', 0) if isinstance(hit.get('views'), int) else 0
+            hit_views = hit.get('daily_views', 0) if isinstance(hit.get('daily_views'), int) else 0
             sub_views = sm_views + me_views + hit_views
             sub_len = len(sm) + len(me) + 1
             sub_hits.append((sm, hit, me, sub_len, sub_views))
@@ -417,11 +418,19 @@ def genV3(es, connected, GEMINI_API_KEY, query, depth=2):
         return ([], 0)
 
     (cross_ref_hits, cross_ref_views) = cross_ref(keywords[0], keywords[1], depth)
-    if not cross_ref_hits or len(cross_ref_hits) <= 0:
-        return jsonify({"error": "⚠️ No cross-reference hits found - Exiting Search"}), 400
 
-    cross_ref_hits = [wiki_data[0]] + cross_ref_hits + [wiki_data[1]]
-    print(f"🔍 Cross-reference hits found: {[ch['title'] for ch in cross_ref_hits]}")
-    report_es_results(keywords, cross_ref_hits)
+    # Fallback to genV2 if no cross-reference hits are found
+    if not cross_ref_hits or len(cross_ref_hits) <= 0:
+        print(f"⚠️ No hits found for: {keywords[0]} and {keywords[1]} - Exiting Search")
+        print(f"Falling back to genV2 for {keywords[0]} and {keywords[1]}")
+        return genV2(es, connected, GEMINI_API_KEY, query, article_limit)
+
+    wiki_data = [wiki_data[0]] + cross_ref_hits + [wiki_data[1]]
+    print(f"🔍 Cross-reference hits found: {[ch['title'] for ch in wiki_data]}")
+
+    # Prune via delete dupolicates
+    wiki_data = clean_duplicate_hits(wiki_data)[:article_limit]
+
+    report_es_results(keywords, wiki_data)
     conspiracy_text = gem_consp(GEMINI_API_KEY, keywords, cross_ref_hits)
     return gen_json_output(keywords, conspiracy_text, cross_ref_hits)
