@@ -31,7 +31,7 @@ def create_index_with_mapping(es, index_name):
                     "type": "text",
                     "analyzer": "standard"
                 },
-                "content": {
+                "wikipedia_content": {
                     "type": "text",
                     "analyzer": "english"  # Use the English analyzer for better text analysis
                 },
