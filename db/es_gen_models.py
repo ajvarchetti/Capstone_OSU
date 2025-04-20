@@ -422,7 +422,7 @@ def genV3(es, connected, GEMINI_API_KEY, query, depth=2, article_limit=10):
     (cross_ref_hits, cross_ref_views) = cross_ref(keywords[0], keywords[1], depth)
 
     # Fallback to genV2 if no cross-reference hits are found
-    if not cross_ref_hits or len(cross_ref_hits) <= 0:
+    if not cross_ref_hits or len(cross_ref_hits) <= 1:
         print(f"⚠️ No hits found for: {keywords[0]} and {keywords[1]} - Exiting Search")
         print(f"Falling back to genV2 for {keywords[0]} and {keywords[1]}")
         return genV2(es, connected, GEMINI_API_KEY, query, article_limit)
