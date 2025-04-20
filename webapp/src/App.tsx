@@ -146,6 +146,7 @@ function App() {
                   if (window.confirm('Are you sure you want to clear the response history? This action cannot be undone.')) {
                     clearHistory();
                   }
+                  startNewTheory();
                 }}
                 title="Clear History"
                 style={{ background: 'none', border: 'none', cursor: 'pointer' }}
@@ -174,7 +175,7 @@ function App() {
 
         <img className="main-logo" src="favicon.png" />
 
-      <h1 className="title">Conspiragen</h1>
+        <h1 className="title">Conspiragen</h1>
       
         {!showResponse ? (
           <div>

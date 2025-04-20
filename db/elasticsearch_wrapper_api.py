@@ -69,11 +69,11 @@ def getSamples():
 
     if not es or not connected:
         print("❌ Elasticsearch is not connected.")
-        return None
+        return jsonify({"error": "Elasticsearch is not connected"}), 500
 
     if not es.indices.exists(index="wikipedia"):
         print(f"❌ Index 'wikipedia' does not exist")
-        return None
+        return jsonify({"error": "Index 'wikipedia' does not exist"}), 500
 
     try:
         seed = int(datetime.now().strftime("%H%M%S"))  # Use current time as seed
