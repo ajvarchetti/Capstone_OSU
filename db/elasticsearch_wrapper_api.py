@@ -72,79 +72,6 @@ def reimport_data():
     except subprocess.CalledProcessError as e:
         print(f"❌ Import failed: {e}")
 
-def search_wikipedia(query):
-    """
-    Search Wikipedia data in Elasticsearch
-    """
-    print(f"🔍 Searching for: {query}")
-    es_query = {
-        "query": {
-            "bool": {
-                "should": [
-                    {"match": {"title": query}},
-                    {"match": {"wikipedia_content": query}}
-                ]
-            }
-        }
-    }
-    
-    try:
-        if not es or not connected:
-            print("❌ Elasticsearch is not connected.")
-            return jsonify({"error": "Elasticsearch is not connected"}), 500
-
-        if not check_index_exists(es, "wikipedia"):
-            print(f"❌ Index 'wikipedia' does not exist")
-            return jsonify({"error": "Index 'wikipedia' does not exist"}), 404
-            
-        response = es.search(index="wikipedia", query=es_query["query"])
-        hits = response.get("hits", {}).get("hits", [])
-        
-        if not hits:
-            print(f"⚠️ No Wikipedia data found for query: {query}")
-            return jsonify({"error": f"No Wikipedia data found for query: {query}"}), 404
-        
-        print(f"✅ Found {len(hits)} results for {query}")
-        return hits[0]["_source"]
-    except Exception as e:
-        print(f"❌ Elasticsearch error: {e}")
-        return jsonify({"error": f"Elasticsearch error: {str(e)}"}), 500
-
-def generate_conspiracy(keywords, wiki_data):
-    """
-    Use Gemini AI to generate a conspiracy theory
-    """
-    if not GEMINI_API_KEY:
-        return "Error: Gemini API key is not set."
-
-    try:
-        model = genai.GenerativeModel("gemini-1.5-pro")
-    except Exception as e:
-        return f"❌ Error initializing Gemini model: {e}"
-
-    prompt = f"""
-    You are a writer of absurd fictional conspiracy theories. They should be plausible (but do not need to be truthful), creative, entertaining and most of all, funny.
-    The conspiracy theory should be relatively simple and easy to understand, and between 5-8 sentences long.
-    You are given two topics and their respective wikipedia articles. Try to use information from the wikipedia articles to link the topics together in a humerous way.
-    The topics are: {', '.join(keywords)}.
-
-    Wikipedia data for each term will be delimited as - **term**: <content>
-
-    If a piece of information is not relevant to the conspiracy theory, do not include it in the response.
-    If a given topic is fictional, you may include the factual information about it's creation and factual history, but do not include any information about the fictional world it is set in.
-    If the topics supplied are NSFW, vulgar, or otherwise inappropriate, please do not generate a conspiracy theory. Instead, return a message saying "Sorry, I can't help with that."
-    Do not admit that the conspiracy theory is fictional, and do not include any disclaimers or other text in the response.
-    """
-    
-    for data in wiki_data:
-        prompt += f"\n- **{data['title']}**: <{data.get('wikipedia_content', 'Content not available')}>\n"
-
-    try:
-        response = model.generate_content(prompt)
-        return response.text if hasattr(response, 'text') else "Error: Invalid response format."
-    except Exception as e:
-        return f"❌ Gemini API error: {e}"
-
 # API Endpoints
 @app.route("/generate", methods=["GET"])
 def generate():
@@ -160,7 +87,8 @@ def generate():
         if not check_index_exists(es, "wikipedia"):
             return jsonify({"error": "Failed to create 'wikipedia' index after re-importing data"}), 500
 
-    obj = genV2(es, connected, GEMINI_API_KEY, query)
+    obj = genV3(es, connected, GEMINI_API_KEY, query, article_limit=5)
+
     # obj = genV1(es, connected, GEMINI_API_KEY, query)
 
     return obj
