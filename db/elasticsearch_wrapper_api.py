@@ -67,7 +67,7 @@ def reimport_data():
     """
     try:
         print("🔄 Re-importing Wikipedia data...")
-        subprocess.run(["docker", "compose", "-f", "compose.prod.yml", "run", "--rm", "import-data"], check=True)
+        subprocess.run(["docker", "compose", "-f", "/root/compose.prod.yml", "run", "--rm", "import-data"], check=True)
         print("✅ Wikipedia data re-imported successfully.")
     except subprocess.CalledProcessError as e:
         print(f"❌ Import failed: {e}")
